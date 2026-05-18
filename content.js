@@ -62,6 +62,34 @@
       .gmapsx-btn{cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;padding:10px 14px;border-radius:999px;font-weight:700}
       .gmapsx-btn.primary{background:linear-gradient(90deg,rgba(255,79,0,.95),rgba(255,122,51,.92));border-color:transparent;color:#fff}
       .gmapsx-btn:disabled{opacity:.7;cursor:not-allowed}
+      #gmapsx-game-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:999998;color:#e7ecf3;font:500 14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto;}
+      .gmapsx-game-modal{width:min(620px,94vw);background:#000;border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.75)}
+      .gmapsx-game-modal h3{margin:0 0 6px;font-size:20px}
+      .gmapsx-game-subtitle{margin:0 0 14px;color:#9aa4b2}
+      .gmapsx-game-stage{position:relative;height:180px;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg,#111 0%,#050505 100%)}
+      .gmapsx-game-modal.game-over .gmapsx-game-stage{border-color:rgba(239,68,68,.45)}
+      .gmapsx-game-ground{position:absolute;left:0;right:0;bottom:34px;height:2px;background:rgba(255,255,255,.18)}
+      .gmapsx-game-runner{position:absolute;left:38px;bottom:36px;width:66px;height:44px}
+      .gmapsx-cat-body{position:absolute;left:16px;bottom:9px;width:36px;height:22px;border-radius:18px 16px 12px 12px;background:#ff4f00;box-shadow:inset 0 -7px 0 rgba(0,0,0,.14)}
+      .gmapsx-cat-body::after{content:"";position:absolute;left:8px;top:5px;width:4px;height:10px;border-radius:999px;background:rgba(255,255,255,.22);box-shadow:9px 0 0 rgba(255,255,255,.16)}
+      .gmapsx-cat-head{position:absolute;right:1px;bottom:21px;width:23px;height:22px;border-radius:13px 13px 11px 11px;background:#ff4f00}
+      .gmapsx-cat-head::before,.gmapsx-cat-head::after{content:"";position:absolute;top:-6px;width:10px;height:10px;background:#ff4f00;clip-path:polygon(50% 0,0 100%,100% 100%)}
+      .gmapsx-cat-head::before{left:2px}.gmapsx-cat-head::after{right:2px}
+      .gmapsx-cat-face{position:absolute;right:6px;bottom:29px;width:4px;height:4px;border-radius:50%;background:#111;box-shadow:8px 0 0 #111}
+      .gmapsx-cat-tail{position:absolute;left:2px;bottom:22px;width:20px;height:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 28'%3E%3Cpath d='M 17 25 C 17 15, 3 18, 3 10 C 3 4, 13 4, 13 9' fill='none' stroke='%23ff4f00' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;transform-origin:17px 25px;transform:rotate(-7deg);animation:gmapsxCatTail .44s ease-in-out infinite alternate}
+      .gmapsx-cat-leg{position:absolute;bottom:0;width:7px;height:15px;border-radius:0 0 6px 6px;background:#ff4f00;animation:gmapsxCatWalk .24s ease-in-out infinite alternate}
+      .gmapsx-cat-leg.back{left:24px}.gmapsx-cat-leg.front{left:43px;animation-delay:.12s}
+      .gmapsx-game-runner.jump{animation:gmapsxJump .78s ease-out}
+      .gmapsx-game-obstacle{position:absolute;right:-28px;bottom:36px;width:17px;height:30px;border-radius:5px 5px 3px 3px;background:#e7ecf3;z-index:1}
+      .gmapsx-game-score{display:flex;justify-content:space-between;gap:10px;margin-top:12px;color:#cbd5e1;font-weight:700}
+      .gmapsx-game-hint{color:#9aa4b2;font-size:12px;font-weight:500}
+      .gmapsx-game-over{position:absolute;inset:0;z-index:5;display:grid;place-items:center;gap:6px;align-content:center;background:rgba(0,0,0,.72);text-align:center}
+      .gmapsx-game-over[hidden]{display:none}
+      .gmapsx-game-over strong{font-size:28px;color:#f8fafc}
+      .gmapsx-game-over span{font-size:13px;color:#cbd5e1}
+      @keyframes gmapsxJump{0%,100%{transform:translateY(0)}45%{transform:translateY(-132px)}}
+      @keyframes gmapsxCatWalk{0%{transform:translateY(0) rotate(-8deg)}100%{transform:translateY(3px) rotate(8deg)}}
+      @keyframes gmapsxCatTail{0%{transform:rotate(-10deg)}100%{transform:rotate(-4deg)}}
     `;
     document.documentElement.appendChild(style);
   }
@@ -81,6 +109,207 @@
     toast.classList.add('show');
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => toast.classList.remove('show'), 2400);
+  }
+
+  function openExtractionGame() {
+    ensureStyles();
+    document.getElementById('gmapsx-game-backdrop')?.remove();
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'gmapsx-game-backdrop';
+    backdrop.innerHTML = `
+      <div class="gmapsx-game-modal" role="dialog" aria-modal="true" aria-label="Extraindo leads">
+        <h3>Extraindo leads...</h3>
+        <p class="gmapsx-game-subtitle">Enquanto buscamos os contatos, pule os obstáculos para passar o tempo.</p>
+        <div class="gmapsx-game-stage" tabindex="0">
+          <div class="gmapsx-game-ground"></div>
+          <div class="gmapsx-game-runner" aria-hidden="true">
+            <span class="gmapsx-cat-tail"></span>
+            <span class="gmapsx-cat-body"></span>
+            <span class="gmapsx-cat-head"></span>
+            <span class="gmapsx-cat-face"></span>
+            <span class="gmapsx-cat-leg back"></span>
+            <span class="gmapsx-cat-leg front"></span>
+          </div>
+          <div class="gmapsx-game-over" hidden>
+            <strong>Game over</strong>
+            <span>Pressione espaço ou clique para reiniciar</span>
+          </div>
+        </div>
+        <div class="gmapsx-game-score">
+          <span>Pontos: <b data-score>0</b></span>
+          <span class="gmapsx-game-hint">Espaço, ↑ ou clique para pular</span>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    const stage = backdrop.querySelector('.gmapsx-game-stage');
+    const modal = backdrop.querySelector('.gmapsx-game-modal');
+    const runner = backdrop.querySelector('.gmapsx-game-runner');
+    const score = backdrop.querySelector('[data-score]');
+    const gameOverMessage = backdrop.querySelector('.gmapsx-game-over');
+    const obstacles = new Set();
+    const timers = new Set();
+    let points = 0;
+    let closed = false;
+    let gameOver = false;
+    let jumping = false;
+
+    const addTimer = (callback, delay, repeat = false) => {
+      const timer = repeat ? setInterval(callback, delay) : setTimeout(callback, delay);
+      timers.add({ timer, repeat });
+      return timer;
+    };
+
+    const stopTimers = () => {
+      for (const { timer, repeat } of timers) {
+        if (repeat) clearInterval(timer);
+        else clearTimeout(timer);
+      }
+      timers.clear();
+    };
+
+    const hasCollision = (obstacle) => {
+      const runnerBox = runner.getBoundingClientRect();
+      const obstacleBox = obstacle.getBoundingClientRect();
+      const runnerHitbox = {
+        left: runnerBox.left + 14,
+        right: runnerBox.right - 10,
+        top: runnerBox.top + 8,
+        bottom: runnerBox.bottom,
+      };
+      const obstacleHitbox = {
+        left: obstacleBox.left + 2,
+        right: obstacleBox.right - 2,
+        top: obstacleBox.top + 3,
+        bottom: obstacleBox.bottom,
+      };
+      return !(
+        runnerHitbox.right < obstacleHitbox.left ||
+        runnerHitbox.left > obstacleHitbox.right ||
+        runnerHitbox.bottom < obstacleHitbox.top ||
+        runnerHitbox.top > obstacleHitbox.bottom
+      );
+    };
+
+    const setGameOver = () => {
+      gameOver = true;
+      jumping = false;
+      runner.classList.remove('jump');
+      modal.classList.add('game-over');
+      gameOverMessage.hidden = false;
+      stopTimers();
+    };
+
+    const startSpawning = () => {
+      addTimer(spawnObstacle, 1200);
+      addTimer(spawnObstacle, 3800, true);
+    };
+
+    const restartGame = () => {
+      if (closed) return;
+
+      stopTimers();
+      for (const obstacle of obstacles) obstacle.remove();
+      obstacles.clear();
+      points = 0;
+      score.textContent = '0';
+      gameOver = false;
+      jumping = false;
+      modal.classList.remove('game-over');
+      gameOverMessage.hidden = true;
+      runner.classList.remove('jump');
+      startSpawning();
+    };
+
+    const jump = () => {
+      if (jumping || closed || gameOver) return;
+      jumping = true;
+      runner.classList.add('jump');
+      addTimer(() => {
+        runner.classList.remove('jump');
+        jumping = false;
+      }, 780);
+    };
+
+    const spawnObstacle = () => {
+      if (closed || gameOver) return;
+
+      const obstacle = document.createElement('div');
+      obstacle.className = 'gmapsx-game-obstacle';
+      stage.appendChild(obstacle);
+      obstacles.add(obstacle);
+
+      let x = stage.clientWidth + 28;
+      const speed = 4.4 + Math.min(points / 120, 2.8);
+      const move = setInterval(() => {
+        if (closed || gameOver) {
+          clearInterval(move);
+          return;
+        }
+
+        x -= speed;
+        obstacle.style.transform = `translateX(${-stage.clientWidth - 56 + x}px)`;
+
+        if (hasCollision(obstacle)) {
+          setGameOver();
+          return;
+        }
+
+        if (x < -40) {
+          clearInterval(move);
+          obstacle.remove();
+          obstacles.delete(obstacle);
+          points += 1;
+          score.textContent = String(points);
+        }
+      }, 24);
+
+      timers.add({ timer: move, repeat: true });
+    };
+
+    const handleKeydown = (event) => {
+      if (event.code === 'Space' || event.code === 'ArrowUp') {
+        event.preventDefault();
+        if (gameOver) {
+          restartGame();
+          return;
+        }
+        jump();
+      }
+    };
+
+    const handleClick = () => {
+      if (gameOver) restartGame();
+      else jump();
+    };
+
+    backdrop.addEventListener('click', handleClick);
+    window.addEventListener('keydown', handleKeydown);
+    stage.focus();
+
+    startSpawning();
+
+    return {
+      backdrop,
+      close() {
+        closed = true;
+        for (const { timer, repeat } of timers) {
+          if (repeat) clearInterval(timer);
+          else clearTimeout(timer);
+        }
+        window.removeEventListener('keydown', handleKeydown);
+        backdrop.removeEventListener('click', handleClick);
+        for (const obstacle of obstacles) obstacle.remove();
+        backdrop.remove();
+      },
+    };
+  }
+
+  function closeExtractionGame(game) {
+    game?.close?.();
   }
 
   function isValidWebhookUrl(url) {
@@ -449,11 +678,17 @@
   }
 
   async function runExtraction() {
+    let game = null;
+
     try {
       ensureStyles();
       log('content.js iniciado em /maps/search/.');
 
+      game = openExtractionGame();
       const leads = await extractLeadsFromResults();
+      closeExtractionGame(game);
+      game = null;
+
       if (!leads.length) {
         showToast('Nenhum lead encontrado.', false);
         return;
@@ -463,6 +698,7 @@
       showToast(`Extração concluída (${leads.length})!`);
       await openSendModal(leads.length);
     } catch (error) {
+      closeExtractionGame(game);
       log(error?.message || error);
       showToast(error?.message || 'Erro ao extrair leads.', false);
     }
