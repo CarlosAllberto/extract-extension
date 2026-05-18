@@ -1,0 +1,23 @@
+{
+   "action": {
+      "default_icon": {
+         "128": "icon128.png",
+         "16": "icon16.png",
+         "48": "icon48.png"
+      }
+   },
+   "background": {
+      "service_worker": "background.js"
+   },
+   "description": "Extrai leads do Google Maps e envia para o seu webhook.",
+   "host_permissions": [ "*://*.google.com/*", "*://*.google.com.br/*" ],
+   "icons": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "48": "icon48.png"
+   },
+   "manifest_version": 3,
+   "name": "Extract Extension - Treendz",
+   "permissions": [ "tabs", "storage", "scripting", "webNavigation", "activeTab" ],
+   "version": "1.0.0"
+}
