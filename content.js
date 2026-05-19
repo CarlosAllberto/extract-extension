@@ -4,7 +4,6 @@
     webhook: 'gmaps_extractor_webhook',
     leads: 'gmaps_leads',
   };
-
   if (!SEARCH_PATH_RE.test(location.href)) return;
   if (window.__gmapsExtractorRunning) return;
   window.__gmapsExtractorRunning = true;
@@ -58,6 +57,7 @@
       .gmapsx-modal .body{padding:8px 0}
       .gmapsx-modal label{display:block;font-size:12px;color:#9aa4b2;margin:0 0 6px 2px}
       .gmapsx-modal input[type="text"]{box-sizing:border-box;width:100%;max-width:100%;display:block;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#050505;color:#e7ecf3;outline:none}
+      .gmapsx-modal input[type="text"][readonly]{opacity:.85;cursor:default}
       .gmapsx-modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap}
       .gmapsx-btn{cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;padding:10px 14px;border-radius:999px;font-weight:700}
       .gmapsx-btn.primary{background:linear-gradient(90deg,rgba(255,79,0,.95),rgba(255,122,51,.92));border-color:transparent;color:#fff}
@@ -337,11 +337,196 @@
     return normalizeText(cleaned);
   }
 
-  function formatBrazilianPhone(value) {
+  function isGenericDetailText(text) {
+    const cleaned = normalizeText(text);
+    if (!cleaned) return true;
+    if (/\d{2,}/.test(cleaned) && cleaned.length > 6) return false;
+
+    if (/enviar para|send to|smartphone|smart phone|dispositivo móvel|mobile device|toque para|tap to/i.test(cleaned)) {
+      return true;
+    }
+
+    return /^(telefone|phone|endereço|endereco|address|website|site|copiar telefone|copy phone|copiar|copy|ligar|call|rotas|directions|salvar|save|compartilhar|share)$/i.test(cleaned);
+  }
+
+  function phoneDigitsCount(value) {
+    return String(value || '').replace(/\D/g, '').length;
+  }
+
+  function isPhoneActionLabel(text) {
+    const cleaned = normalizeText(text);
+    if (!cleaned) return true;
+    if (phoneDigitsCount(cleaned) >= 10) return false;
+
+    return /enviar para|send to|smartphone|smart phone|copiar|copy|ligar|call|toque para|tap to/i.test(cleaned);
+  }
+
+  function extractPhoneDigitsFromText(text) {
+    const cleaned = normalizeText(text);
+    if (!cleaned || isPhoneActionLabel(cleaned)) return '';
+
+    const labeled = cleaned.match(/(?:telefone|phone)\s*:?\s*(.+)$/i);
+    const source = labeled ? labeled[1] : cleaned;
+    if (isPhoneActionLabel(source)) return '';
+
+    return phoneDigitsCount(source) >= 10 ? source : '';
+  }
+
+  function getPlaceTitle() {
+    return document.querySelector('h1.DUwDvf, h1[role="heading"]');
+  }
+
+  function getPlaceDetailRoot() {
+    const title = getPlaceTitle();
+    if (!title) return document.querySelector('#pane') || document.body;
+
+    let node = title.parentElement;
+    while (node && node !== document.body) {
+      const hasDetailRows = node.querySelector([
+        '[data-item-id="address"]',
+        '[data-item-id^="phone"]',
+        '[data-item-id="authority"]',
+      ].join(','));
+      if (hasDetailRows) return node;
+      node = node.parentElement;
+    }
+
+    const pane = document.querySelector('#pane');
+    if (pane?.contains(title)) return pane;
+
+    return title.closest('[role="main"]') || pane || document.body;
+  }
+
+  function queryAllInDetailRoot(selector) {
+    return [...getPlaceDetailRoot().querySelectorAll(selector)];
+  }
+
+  function scrollDetailRoot() {
+    const root = getPlaceDetailRoot();
+    const scrollable = root.closest('.m6QErb') || root;
+    if (scrollable.scrollHeight <= scrollable.clientHeight + 10) return;
+
+    scrollable.scrollTop = 0;
+    scrollable.scrollTop = Math.floor(scrollable.scrollHeight / 2);
+    scrollable.scrollTop = scrollable.scrollHeight;
+  }
+
+  function hasPhoneRowInDetail() {
+    const root = getPlaceDetailRoot();
+    return Boolean(root.querySelector([
+      '[data-item-id^="phone"]',
+      '[data-item-id*="phone:tel"]',
+      'a[href^="tel:"]',
+      'button[aria-label*="Telefone" i]',
+      'button[aria-label*="Phone" i]',
+    ].join(',')));
+  }
+
+  function visibleValueFromElement(element) {
+    if (!element) return '';
+
+    const visibleNode = element.querySelector('.Io6YTe, .fontBodyMedium');
+    const visibleText = textFrom(visibleNode);
+    if (visibleText && !isGenericDetailText(visibleText)) return visibleText;
+
+    return '';
+  }
+
+  function parsePhoneFromDataItemId(value) {
+    const itemId = normalizeText(value);
+    if (!itemId) return '';
+
+    const telMatch = itemId.match(/phone:tel:([^;]+)/i);
+    if (telMatch) return normalizeText(decodeURIComponent(telMatch[1]));
+
+    return '';
+  }
+
+  function detailTextFromElement(element, labels = []) {
+    if (!element) return '';
+
+    const visible = visibleValueFromElement(element);
+    if (visible) return visible;
+
+    const href = element.getAttribute('href') || '';
+    if (href.startsWith('tel:')) {
+      return normalizeText(decodeURIComponent(href.replace(/^tel:/i, '')));
+    }
+
+    const fromItemId = parsePhoneFromDataItemId(element.getAttribute('data-item-id'));
+    if (fromItemId) return fromItemId;
+
+    const attrs = [
+      element.getAttribute('aria-label'),
+      element.getAttribute('data-tooltip'),
+      element.getAttribute('title'),
+      element.getAttribute('data-value'),
+      element.getAttribute('href'),
+      textFrom(element),
+    ];
+
+    for (const attr of attrs) {
+      const text = cleanLabeledText(attr, labels);
+      if (text && !isGenericDetailText(text)) return text;
+    }
+
+    return '';
+  }
+
+  function getDetailText(selectors, labels = []) {
+    for (const element of queryAllInDetailRoot(selectors)) {
+      const text = detailTextFromElement(element, labels);
+      if (text) return text;
+    }
+
+    return '';
+  }
+
+  function countFilledLeadFields(lead) {
+    return [
+      lead.telefone,
+      lead.endereco,
+      lead.website,
+      lead.rating,
+      lead.reviews,
+      lead.especialidades,
+    ].filter(Boolean).length;
+  }
+
+  function normalizeBrazilPhoneDigits(value) {
     let digits = String(value || '').replace(/\D/g, '');
-    if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) {
+    if (!digits) return '';
+
+    while (digits.startsWith('55') && digits.length > 11) {
       digits = digits.slice(2);
     }
+
+    if (digits.length === 12 && digits.startsWith('55')) {
+      digits = digits.slice(2);
+    }
+
+    if (digits.length === 11 && digits.startsWith('0')) {
+      digits = digits.slice(1);
+    }
+
+    if (digits.length === 12 && digits.startsWith('0')) {
+      digits = digits.slice(1);
+    }
+
+    return digits.length === 10 || digits.length === 11 ? digits : '';
+  }
+
+  function isValidBrazilianDdd(ddd) {
+    const code = Number.parseInt(ddd, 10);
+    return code >= 11 && code <= 99;
+  }
+
+  function formatBrazilianPhone(value) {
+    const digits = normalizeBrazilPhoneDigits(value);
+    if (!digits) return '';
+
+    const ddd = digits.slice(0, 2);
+    if (!isValidBrazilianDdd(ddd)) return '';
 
     if (digits.length === 11) {
       return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
@@ -351,7 +536,73 @@
       return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
     }
 
-    return normalizeText(value);
+    return '';
+  }
+
+  function extractPhone() {
+    const root = getPlaceDetailRoot();
+
+    const tryValue = (value) => {
+      const source = extractPhoneDigitsFromText(value) || value;
+      return formatBrazilianPhone(source);
+    };
+
+    const elements = [...root.querySelectorAll([
+      'button[data-item-id^="phone"]',
+      '[role="button"][data-item-id^="phone"]',
+      'a[href^="tel:"]',
+    ].join(','))];
+
+    elements.sort((a, b) => {
+      const score = (node) => {
+        const itemId = node.getAttribute('data-item-id') || '';
+        if (/phone:tel:/i.test(itemId)) return 3;
+        if ((node.getAttribute('href') || '').startsWith('tel:')) return 2;
+        if (node.querySelector('.Io6YTe')) return 1;
+        return 0;
+      };
+      return score(b) - score(a);
+    });
+
+    for (const element of elements) {
+      const fromItemId = parsePhoneFromDataItemId(element.getAttribute('data-item-id'));
+      const hitFromId = tryValue(fromItemId);
+      if (hitFromId) return hitFromId;
+
+      const href = element.getAttribute('href') || '';
+      if (href.startsWith('tel:')) {
+        const hitFromHref = tryValue(decodeURIComponent(href.replace(/^tel:/i, '')));
+        if (hitFromHref) return hitFromHref;
+      }
+
+      for (const io of element.querySelectorAll('.Io6YTe, .fontBodyMedium')) {
+        const hitFromIo = tryValue(textFrom(io));
+        if (hitFromIo) return hitFromIo;
+      }
+
+      const hitFromVisible = tryValue(visibleValueFromElement(element));
+      if (hitFromVisible) return hitFromVisible;
+
+      for (const attr of [
+        element.getAttribute('aria-label'),
+        element.getAttribute('data-tooltip'),
+      ]) {
+        const hitFromAttr = tryValue(cleanLabeledText(attr, ['Telefone', 'Phone', 'Copiar telefone', 'Copy phone']));
+        if (hitFromAttr) return hitFromAttr;
+      }
+    }
+
+    return '';
+  }
+
+  async function waitForPhoneNumber() {
+    if (!hasPhoneRowInDetail()) return;
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      if (extractPhone()) return;
+      scrollDetailRoot();
+      await sleep(300);
+    }
   }
 
   function findScrollableFeed() {
@@ -423,55 +674,96 @@
     );
   }
 
-  function collectResultUrls() {
-    const urls = new Set();
-    const anchors = document.querySelectorAll('#pane a.hfpxzc[href*="/maps/place/"], a.hfpxzc[href*="/maps/place/"]');
+  function normalizePlaceUrl(href) {
+    try {
+      const parsed = new URL(href, location.origin);
+      return `${parsed.origin}${parsed.pathname}`;
+    } catch {
+      return String(href || '').split('&')[0].split('?')[0];
+    }
+  }
 
-    for (const anchor of anchors) {
+  function collectResultAnchors() {
+    const feed = findScrollableFeed();
+    const scope = feed || document.querySelector('#pane') || document;
+    const seen = new Set();
+    const anchors = [];
+
+    for (const anchor of scope.querySelectorAll('a.hfpxzc[href*="/maps/place/"]')) {
       if (!anchor.href || isSponsoredResult(anchor)) continue;
-      urls.add(anchor.href.split('&entry=')[0]);
+
+      const key = normalizePlaceUrl(anchor.href);
+      if (seen.has(key)) continue;
+
+      seen.add(key);
+      anchors.push(anchor);
     }
 
-    return [...urls];
+    return anchors;
   }
 
   function findResultAnchorByUrl(url) {
-    return [...document.querySelectorAll('a.hfpxzc[href*="/maps/place/"]')]
-      .find((anchor) => anchor.href && anchor.href.startsWith(url));
+    const target = normalizePlaceUrl(url);
+    return collectResultAnchors().find((anchor) => normalizePlaceUrl(anchor.href) === target);
+  }
+
+  function hasPlaceDetailsLoaded(previousTitle = '') {
+    const title = textFrom(getPlaceTitle());
+    if (!title || title === previousTitle) return false;
+
+    const root = getPlaceDetailRoot();
+    return Boolean(
+      root.querySelector('[data-item-id="address"], [data-item-id^="phone"], a[href^="tel:"]')
+    );
   }
 
   async function waitForPlaceDetails(previousTitle = '') {
-    for (let attempt = 0; attempt < 50; attempt += 1) {
-      const title = textFrom(document.querySelector('h1.DUwDvf'));
-      if (title && title !== previousTitle) return true;
+    for (let attempt = 0; attempt < 80; attempt += 1) {
+      if (hasPlaceDetailsLoaded(previousTitle)) return true;
       await sleep(200);
     }
-    return Boolean(document.querySelector('h1.DUwDvf'));
-  }
 
-  function getDetailButtonText(selectors, labels = []) {
-    const element = document.querySelector(selectors);
-    const aria = normalizeText(element?.getAttribute('aria-label') || '');
-    const text = aria || textFrom(element);
-    return cleanLabeledText(text, labels);
+    return Boolean(getPlaceTitle());
   }
 
   function extractWebsite() {
-    const websiteLink = document.querySelector([
-      '#pane a[data-item-id="authority"]',
-      '#pane a[aria-label*="Website" i]',
-      '#pane a[aria-label*="Site" i]',
-      '#pane a[href^="http"]:not([href*="google."]):not([href*="gstatic."])',
+    const root = getPlaceDetailRoot();
+    const websiteLinks = root.querySelectorAll([
+      'a[data-item-id="authority"]',
+      'a[aria-label*="Website" i]',
+      'a[aria-label*="Site" i]',
+      'a[data-tooltip*="Website" i]',
+      'a[data-tooltip*="Site" i]',
+      'a[href^="http"]:not([href*="google."]):not([href*="gstatic."])',
     ].join(','));
 
-    return websiteLink?.href || '';
+    for (const link of websiteLinks) {
+      const href = link.href || detailTextFromElement(link, ['Website', 'Site']);
+      if (
+        href &&
+        /^https?:\/\//i.test(href) &&
+        !/google\.|gstatic\.|ggpht\.|schema\.org|maps\.google/i.test(href)
+      ) {
+        return href;
+      }
+    }
+
+    return '';
   }
 
   function extractRatingAndReviews() {
-    const panelText = textFrom(document.querySelector('#pane'));
-    const ratingNode = document.querySelector('#pane div.F7nice span[aria-hidden="true"]');
-    const ratingText = textFrom(ratingNode) || panelText.match(/\b\d[,.]\d\b/)?.[0] || '';
-    const reviewsText = panelText.match(/([\d.,]+)\s*(avaliações|reviews)/i)?.[1] || '';
+    const root = getPlaceDetailRoot();
+    const panelText = textFrom(root);
+    const ratingNode = root.querySelector([
+      'motion.div.F7nice span[aria-hidden="true"]',
+      'motion.div.F7nice',
+      'motion.div.F7nice span',
+      'span[aria-label*="estrelas" i]',
+      'span[aria-label*="stars" i]',
+    ].join(','));
+    const ratingSource = detailTextFromElement(ratingNode) || panelText;
+    const ratingText = ratingSource.match(/\b\d[,.]\d\b/)?.[0] || '';
+    const reviewsText = panelText.match(/([\d.,]+)\s*(avaliações|avaliacoes|reviews|comentários|comentarios)/i)?.[1] || '';
 
     return {
       rating: ratingText.replace(',', '.'),
@@ -480,70 +772,130 @@
   }
 
   function extractSpecialties() {
+    const root = getPlaceDetailRoot();
     const categories = [
-      ...document.querySelectorAll('#pane button.DkEaL, #pane button[jsaction*="category"], #pane [data-item-id*="category"]'),
+      ...root.querySelectorAll([
+        'button.DkEaL',
+        'button[jsaction*="category"]',
+        'button[aria-label*="Categoria" i]',
+        'button[aria-label*="Category" i]',
+        '[data-item-id*="category"]',
+      ].join(',')),
     ]
-      .map(textFrom)
-      .filter(Boolean);
+      .map((element) => detailTextFromElement(element, ['Categoria', 'Category']))
+      .filter((category) => category && !/adicionar|add|editar|edit/i.test(category));
 
     return [...new Set(categories)].join(', ');
   }
 
+  function hasUsefulLeadDetails(lead) {
+    return countFilledLeadFields(lead) >= 2;
+  }
+
+  function isLeadReady(lead) {
+    if (!lead.nome_empresa) return false;
+    if (hasPhoneRowInDetail() && !lead.telefone) return false;
+    return hasUsefulLeadDetails(lead);
+  }
+
   function extractCurrentLead(index) {
-    const name = textFrom(document.querySelector('h1.DUwDvf'));
-    const phoneRaw = getDetailButtonText([
-      '#pane button[data-item-id^="phone"]',
-      '#pane div[role="button"][data-item-id^="phone"]',
-      '#pane a[href^="tel:"]',
-    ].join(','), ['Telefone', 'Phone']);
-    const address = getDetailButtonText([
-      '#pane button[data-item-id="address"]',
-      '#pane div[role="button"][data-item-id="address"]',
-      '#pane button[aria-label*="Endereço" i]',
-      '#pane button[aria-label*="Address" i]',
+    const root = getPlaceDetailRoot();
+    const name = textFrom(getPlaceTitle());
+    const telefone = extractPhone();
+    const address = getDetailText([
+      'button[data-item-id="address"]',
+      '[role="button"][data-item-id="address"]',
+      'button[aria-label*="Endereço" i]',
+      'button[aria-label*="Address" i]',
+      '[role="button"][aria-label*="Endereço" i]',
+      '[role="button"][aria-label*="Address" i]',
     ].join(','), ['Endereço', 'Address']);
     const { rating, reviews } = extractRatingAndReviews();
 
-    return {
+    const lead = {
       idx: index,
       nome_empresa: name,
-      telefone: formatBrazilianPhone(phoneRaw),
+      telefone,
       endereco: address,
       website: extractWebsite(),
       rating,
       reviews,
       especialidades: extractSpecialties(),
     };
+
+    log('Lead extraído:', lead.nome_empresa, `(${countFilledLeadFields(lead)} campos)`, lead.telefone ? `tel: ${lead.telefone}` : 'sem telefone');
+    return lead;
+  }
+
+  async function extractCurrentLeadWhenReady(index) {
+    await waitForPhoneNumber();
+    scrollDetailRoot();
+    let bestLead = extractCurrentLead(index);
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      if (isLeadReady(bestLead)) return bestLead;
+      await sleep(320);
+      scrollDetailRoot();
+
+      const lead = extractCurrentLead(index);
+      const leadScore = countFilledLeadFields(lead) + (lead.telefone ? 2 : 0);
+      const bestScore = countFilledLeadFields(bestLead) + (bestLead.telefone ? 2 : 0);
+      if (leadScore >= bestScore) bestLead = lead;
+    }
+
+    return bestLead;
+  }
+
+  async function openResultByAnchor(anchor, fallbackUrl = '') {
+    const previousTitle = textFrom(getPlaceTitle());
+    const placeUrl = fallbackUrl || anchor?.href || '';
+
+    const waitForReady = async () => {
+      await waitForPlaceDetails(previousTitle);
+      await sleep(500);
+      scrollDetailRoot();
+      await sleep(350);
+      await waitForPhoneNumber();
+      return hasPlaceDetailsLoaded(previousTitle);
+    };
+
+    if (anchor) {
+      anchor.scrollIntoView({ block: 'center' });
+      await sleep(220);
+      anchor.click();
+      if (await waitForReady()) return true;
+    }
+
+    if (!placeUrl) return false;
+
+    history.pushState(null, '', placeUrl);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await sleep(900);
+    return waitForReady();
   }
 
   async function openResult(url) {
-    const previousTitle = textFrom(document.querySelector('h1.DUwDvf'));
     const anchor = findResultAnchorByUrl(url);
-
-    if (!anchor) return false;
-
-    anchor.scrollIntoView({ block: 'center' });
-    await sleep(180);
-    anchor.click();
-    await waitForPlaceDetails(previousTitle);
-    await sleep(500);
-    return true;
+    return openResultByAnchor(anchor, url);
   }
 
   async function returnToResults(searchUrl) {
-    if (SEARCH_PATH_RE.test(location.href)) return;
+    if (!SEARCH_PATH_RE.test(location.href)) {
+      history.back();
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        if (SEARCH_PATH_RE.test(location.href) || document.querySelector('a.hfpxzc[href*="/maps/place/"]')) break;
+        await sleep(200);
+      }
 
-    history.back();
-    for (let attempt = 0; attempt < 40; attempt += 1) {
-      if (SEARCH_PATH_RE.test(location.href) || document.querySelector('a.hfpxzc[href*="/maps/place/"]')) break;
-      await sleep(200);
+      if (!SEARCH_PATH_RE.test(location.href) && searchUrl) {
+        history.pushState(null, '', searchUrl);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        await sleep(600);
+      }
     }
 
-    if (!SEARCH_PATH_RE.test(location.href) && searchUrl) {
-      history.pushState(null, '', searchUrl);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-      await sleep(600);
-    }
+    await waitForResultsPanel();
+    await sleep(400);
   }
 
   async function extractLeadsFromResults() {
@@ -555,27 +907,55 @@
     }
 
     await scrollResultsToEnd(feed);
-    const urls = collectResultUrls();
-    log('Cards únicos para extrair:', urls.length);
+    const allAnchors = collectResultAnchors();
+    log('Cards para extrair:', allAnchors.length);
 
     const leads = [];
     const seenNames = new Set();
+    let cardIndex = 0;
 
-    for (let index = 0; index < urls.length; index += 1) {
+    while (cardIndex < allAnchors.length) {
+      const anchors = collectResultAnchors();
+      if (cardIndex >= anchors.length) break;
+
+      const anchor = anchors[cardIndex];
+      const cardNumber = cardIndex + 1;
+      cardIndex += 1;
+
       try {
-        const opened = await openResult(urls[index]);
-        if (!opened) continue;
+        log(`Abrindo card ${cardNumber}/${anchors.length}:`, textFrom(anchor) || normalizePlaceUrl(anchor.href));
 
-        const lead = extractCurrentLead(leads.length + 1);
-        if (lead.nome_empresa && !seenNames.has(lead.nome_empresa)) {
-          seenNames.add(lead.nome_empresa);
-          leads.push(lead);
+        let opened = await openResultByAnchor(anchor);
+        if (!opened) {
+          await returnToResults(searchUrl);
+          const retryAnchors = collectResultAnchors();
+          opened = await openResultByAnchor(retryAnchors[cardNumber - 1]);
+        }
+        if (!opened) {
+          log('Não foi possível abrir o card', cardNumber);
+          continue;
         }
 
+        const lead = await extractCurrentLeadWhenReady(leads.length + 1);
+        if (!lead.nome_empresa) {
+          log('Lead sem nome no card', cardNumber);
+          await returnToResults(searchUrl);
+          continue;
+        }
+
+        if (seenNames.has(lead.nome_empresa)) {
+          log('Nome duplicado, pulando card', cardNumber, lead.nome_empresa);
+          await returnToResults(searchUrl);
+          continue;
+        }
+
+        seenNames.add(lead.nome_empresa);
+        leads.push(lead);
         await returnToResults(searchUrl);
-        await sleep(350);
+        await sleep(600);
       } catch (error) {
-        log('Erro ao extrair', index + 1, error?.message || error);
+        log('Erro ao extrair card', cardNumber, error?.message || error);
+        await returnToResults(searchUrl);
       }
     }
 
@@ -602,9 +982,9 @@
         <button class="close" aria-label="Fechar">×</button>
       </header>
       <div class="body">
-        <div style="margin-bottom:8px;color:#9aa4b2">Foram coletados <b>${leadCount}</b> leads. Informe seu webhook para enviar agora.</div>
+        <div style="margin-bottom:8px;color:#9aa4b2">Foram coletados <b>${leadCount}</b> leads. O envio será feito para o webhook configurado na extensão.</div>
         <label for="gmapsx-input">URL do webhook</label>
-        <input id="gmapsx-input" type="text" placeholder="https://seu-dominio.com/webhook/receber">
+        <input id="gmapsx-input" type="text" readonly placeholder="Nenhum webhook configurado">
       </div>
       <div class="actions">
         <button class="gmapsx-btn" id="gmapsx-cancel">Cancelar</button>
@@ -621,8 +1001,13 @@
     const sendButton = modal.querySelector('#gmapsx-send');
     const savedWebhook = await getSavedWebhook();
 
-    if (savedWebhook) input.value = savedWebhook;
-    setTimeout(() => input.focus(), 50);
+    if (savedWebhook) {
+      input.value = savedWebhook;
+    } else {
+      sendButton.disabled = true;
+    }
+
+    setTimeout(() => sendButton.focus(), 50);
 
     const close = () => closeModal(backdrop);
     closeButton.onclick = close;
@@ -634,14 +1019,12 @@
     sendButton.onclick = async () => {
       const webhookUrl = input.value.trim();
       if (!webhookUrl) {
-        showToast('Informe uma URL de webhook.', false);
-        input.focus();
+        showToast('Configure o webhook na extensão antes de enviar.', false);
         return;
       }
 
       if (!isValidWebhookUrl(webhookUrl)) {
-        showToast('URL inválida.', false);
-        input.focus();
+        showToast('Webhook configurado inválido. Atualize na extensão.', false);
         return;
       }
 
