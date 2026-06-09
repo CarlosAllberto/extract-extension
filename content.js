@@ -41,61 +41,74 @@
   };
   const saveLeads = (leads) => setToStorage({ [STORAGE_KEYS.leads]: leads });
 
-  function ensureStyles() {
+  let stylesPromise = null;
+
+  function injectStyleSheet(css) {
     if (document.getElementById('gmaps-extractor-style')) return;
 
     const style = document.createElement('style');
     style.id = 'gmaps-extractor-style';
-    style.textContent = `
-      .gmapsx-toast{position:fixed;right:18px;bottom:18px;z-index:999999;background:#0a0a0a;color:#f8fafc;border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:12px 14px;box-shadow:0 18px 50px rgba(0,0,0,.65);font:600 13px/1.4 Inter,system-ui,-apple-system,Segoe UI,Roboto;opacity:0;transform:translateY(8px);transition:opacity .18s ease,transform .18s ease;pointer-events:none;max-width:min(420px,calc(100vw - 36px));}
-      .gmapsx-toast.show{opacity:1;transform:translateY(0)}
-      .gmapsx-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:999999;}
-      .gmapsx-modal{width:min(520px,94vw);background:#000000;border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:18px;box-shadow:0 30px 80px rgba(0,0,0,.75);color:#e7ecf3;font:500 14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto;}
-      .gmapsx-modal header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-      .gmapsx-modal h3{margin:0;font-size:18px}
-      .gmapsx-modal .close{border:none;background:transparent;color:#9aa4b2;font-size:22px;cursor:pointer}
-      .gmapsx-modal .body{padding:8px 0}
-      .gmapsx-modal label{display:block;font-size:12px;color:#9aa4b2;margin:0 0 6px 2px}
-      .gmapsx-modal input[type="text"]{box-sizing:border-box;width:100%;max-width:100%;display:block;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:#050505;color:#e7ecf3;outline:none}
-      .gmapsx-modal input[type="text"][readonly]{opacity:.85;cursor:default}
-      .gmapsx-modal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;flex-wrap:wrap}
-      .gmapsx-btn{cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:#fff;padding:10px 14px;border-radius:999px;font-weight:700}
-      .gmapsx-btn.primary{background:linear-gradient(90deg,rgba(255,79,0,.95),rgba(255,122,51,.92));border-color:transparent;color:#fff}
-      .gmapsx-btn:disabled{opacity:.7;cursor:not-allowed}
-      #gmapsx-game-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:999998;color:#e7ecf3;font:500 14px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto;}
-      .gmapsx-game-modal{width:min(620px,94vw);background:#000;border:1px solid rgba(255,255,255,.16);border-radius:18px;padding:20px;box-shadow:0 30px 80px rgba(0,0,0,.75)}
-      .gmapsx-game-modal h3{margin:0 0 6px;font-size:20px}
-      .gmapsx-game-subtitle{margin:0 0 14px;color:#9aa4b2}
-      .gmapsx-game-stage{position:relative;height:180px;overflow:hidden;border:1px solid rgba(255,255,255,.12);border-radius:14px;background:linear-gradient(180deg,#111 0%,#050505 100%)}
-      .gmapsx-game-modal.game-over .gmapsx-game-stage{border-color:rgba(239,68,68,.45)}
-      .gmapsx-game-ground{position:absolute;left:0;right:0;bottom:34px;height:2px;background:rgba(255,255,255,.18)}
-      .gmapsx-game-runner{position:absolute;left:38px;bottom:36px;width:66px;height:44px}
-      .gmapsx-cat-body{position:absolute;left:16px;bottom:9px;width:36px;height:22px;border-radius:18px 16px 12px 12px;background:#ff4f00;box-shadow:inset 0 -7px 0 rgba(0,0,0,.14)}
-      .gmapsx-cat-body::after{content:"";position:absolute;left:8px;top:5px;width:4px;height:10px;border-radius:999px;background:rgba(255,255,255,.22);box-shadow:9px 0 0 rgba(255,255,255,.16)}
-      .gmapsx-cat-head{position:absolute;right:1px;bottom:21px;width:23px;height:22px;border-radius:13px 13px 11px 11px;background:#ff4f00}
-      .gmapsx-cat-head::before,.gmapsx-cat-head::after{content:"";position:absolute;top:-6px;width:10px;height:10px;background:#ff4f00;clip-path:polygon(50% 0,0 100%,100% 100%)}
-      .gmapsx-cat-head::before{left:2px}.gmapsx-cat-head::after{right:2px}
-      .gmapsx-cat-face{position:absolute;right:6px;bottom:29px;width:4px;height:4px;border-radius:50%;background:#111;box-shadow:8px 0 0 #111}
-      .gmapsx-cat-tail{position:absolute;left:2px;bottom:22px;width:20px;height:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 28'%3E%3Cpath d='M 17 25 C 17 15, 3 18, 3 10 C 3 4, 13 4, 13 9' fill='none' stroke='%23ff4f00' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;transform-origin:17px 25px;transform:rotate(-7deg);animation:gmapsxCatTail .44s ease-in-out infinite alternate}
-      .gmapsx-cat-leg{position:absolute;bottom:0;width:7px;height:15px;border-radius:0 0 6px 6px;background:#ff4f00;animation:gmapsxCatWalk .24s ease-in-out infinite alternate}
-      .gmapsx-cat-leg.back{left:24px}.gmapsx-cat-leg.front{left:43px;animation-delay:.12s}
-      .gmapsx-game-runner.jump{animation:gmapsxJump .78s ease-out}
-      .gmapsx-game-obstacle{position:absolute;right:-28px;bottom:36px;width:17px;height:30px;border-radius:5px 5px 3px 3px;background:#e7ecf3;z-index:1}
-      .gmapsx-game-score{display:flex;justify-content:space-between;gap:10px;margin-top:12px;color:#cbd5e1;font-weight:700}
-      .gmapsx-game-hint{color:#9aa4b2;font-size:12px;font-weight:500}
-      .gmapsx-game-over{position:absolute;inset:0;z-index:5;display:grid;place-items:center;gap:6px;align-content:center;background:rgba(0,0,0,.72);text-align:center}
-      .gmapsx-game-over[hidden]{display:none}
-      .gmapsx-game-over strong{font-size:28px;color:#f8fafc}
-      .gmapsx-game-over span{font-size:13px;color:#cbd5e1}
-      @keyframes gmapsxJump{0%,100%{transform:translateY(0)}45%{transform:translateY(-132px)}}
-      @keyframes gmapsxCatWalk{0%{transform:translateY(0) rotate(-8deg)}100%{transform:translateY(3px) rotate(8deg)}}
-      @keyframes gmapsxCatTail{0%{transform:rotate(-10deg)}100%{transform:rotate(-4deg)}}
-    `;
+    style.textContent = css;
     document.documentElement.appendChild(style);
   }
 
-  function showToast(message, ok = true) {
-    ensureStyles();
+  function loadStylesheetViaLink() {
+    return new Promise((resolve, reject) => {
+      if (document.getElementById('gmaps-extractor-style')) {
+        resolve();
+        return;
+      }
+
+      const link = document.createElement('link');
+      link.id = 'gmaps-extractor-style';
+      link.rel = 'stylesheet';
+      link.href = chrome.runtime.getURL('gmapsx-ui.css');
+      link.onload = () => resolve();
+      link.onerror = () => reject(new Error('Falha ao carregar gmapsx-ui.css via link'));
+      document.documentElement.appendChild(link);
+    });
+  }
+
+  function ensureStyles() {
+    if (document.getElementById('gmaps-extractor-style')) {
+      return Promise.resolve();
+    }
+
+    if (!stylesPromise) {
+      stylesPromise = (async () => {
+        const url = chrome.runtime.getURL('gmapsx-ui.css');
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          injectStyleSheet(await response.text());
+          return;
+        } catch (error) {
+          log('Fetch de gmapsx-ui.css falhou:', error?.message || error);
+        }
+
+        try {
+          await loadStylesheetViaLink();
+        } catch (error) {
+          log('Link de gmapsx-ui.css falhou:', error?.message || error);
+          throw error;
+        }
+      })().catch((error) => {
+        stylesPromise = null;
+        throw error;
+      });
+    }
+
+    return stylesPromise;
+  }
+
+  async function showToast(message, ok = true) {
+    try {
+      await ensureStyles();
+    } catch (error) {
+      log('Toast sem stylesheet:', error?.message || error);
+    }
+
     let toast = document.getElementById('gmapsx-toast');
     if (!toast) {
       toast = document.createElement('div');
@@ -104,15 +117,16 @@
       document.body.appendChild(toast);
     }
 
-    toast.style.borderColor = ok ? 'rgba(255,79,0,.5)' : 'rgba(239,68,68,.45)';
+    toast.classList.toggle('success', ok);
+    toast.classList.toggle('error', !ok);
     toast.textContent = message;
     toast.classList.add('show');
     clearTimeout(toast._timer);
     toast._timer = setTimeout(() => toast.classList.remove('show'), 2400);
   }
 
-  function openExtractionGame() {
-    ensureStyles();
+  async function openExtractionGame() {
+    await ensureStyles();
     document.getElementById('gmapsx-game-backdrop')?.remove();
 
     const backdrop = document.createElement('div');
@@ -967,7 +981,7 @@
   }
 
   async function openSendModal(leadCount) {
-    ensureStyles();
+    await ensureStyles();
     document.getElementById('gmapsx-send-backdrop')?.remove();
 
     const backdrop = document.createElement('div');
@@ -982,13 +996,13 @@
         <button class="close" aria-label="Fechar">×</button>
       </header>
       <div class="body">
-        <div style="margin-bottom:8px;color:#9aa4b2">Foram coletados <b>${leadCount}</b> leads. O envio será feito para o webhook configurado na extensão.</div>
+        <div class="hint" style="margin-bottom:8px">Foram coletados <b>${leadCount}</b> leads. O envio será feito para o webhook configurado na extensão.</div>
         <label for="gmapsx-input">URL do webhook</label>
         <input id="gmapsx-input" type="text" readonly placeholder="Nenhum webhook configurado">
       </div>
       <div class="actions">
-        <button class="gmapsx-btn" id="gmapsx-cancel">Cancelar</button>
-        <button class="gmapsx-btn primary" id="gmapsx-send">Enviar</button>
+        <button class="gmapsx-btn ghost" id="gmapsx-cancel"><span>Cancelar</span></button>
+        <button class="gmapsx-btn primary" id="gmapsx-send"><span>Enviar</span></button>
       </div>
     `;
 
@@ -1035,7 +1049,7 @@
       }
 
       sendButton.disabled = true;
-      sendButton.textContent = 'Enviando…';
+      sendButton.innerHTML = '<span>Enviando…</span>';
 
       try {
         const response = await fetch(webhookUrl, {
@@ -1055,7 +1069,7 @@
         showToast('Falha ao enviar (verifique CORS/URL).', false);
       } finally {
         sendButton.disabled = false;
-        sendButton.textContent = 'Enviar';
+        sendButton.innerHTML = '<span>Enviar</span>';
       }
     };
   }
@@ -1064,10 +1078,10 @@
     let game = null;
 
     try {
-      ensureStyles();
+      await ensureStyles();
       log('content.js iniciado em /maps/search/.');
 
-      game = openExtractionGame();
+      game = await openExtractionGame();
       const leads = await extractLeadsFromResults();
       closeExtractionGame(game);
       game = null;

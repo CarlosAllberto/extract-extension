@@ -6,25 +6,13 @@
   <title>Extract Extension</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Fonte -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="treendz-ui.css">
 
   <style>
-    :root {
-      --bg: #000000;
-      --bg2: #000000;
-      --card: #111111;
-      --muted: #9aa4b2;
-      --text: #e7ecf3;
-      --acc: #FF4F00;
-      --acc2: #ff7a33;
-      --danger: #ef4444;
-      --ring: 0 0 0 4px rgba(255, 79, 0, .16);
-    }
-
     * {
-      box-sizing: border-box
+      box-sizing: border-box;
     }
 
     html,
@@ -37,21 +25,19 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
-      /* Centraliza verticalmente */
       align-items: center;
-      /* Centraliza horizontalmente */
       background:
-        linear-gradient(rgba(0, 0, 0, .42), rgba(0, 0, 0, .42)),
+        linear-gradient(rgba(0, 0, 0, .58), rgba(0, 0, 0, .58)),
         url("background.webp") center / cover no-repeat,
-        #000000;
-      color: var(--text);
-      font: 500 15px/1.5 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial;
+        var(--background);
+      color: var(--foreground);
+      font: 200 15px/1.5 var(--font-sans);
     }
 
     .wrap {
       max-width: 880px;
       margin: 44px auto;
-      padding: 0 20px
+      padding: 0 20px;
     }
 
     .header {
@@ -61,85 +47,33 @@
       margin-bottom: 18px;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .badge {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02)),
-        linear-gradient(135deg, rgba(255, 79, 0, .55), rgba(255, 122, 51, .45));
-      display: grid;
-      place-items: center;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .08);
-    }
-
-    .brand .title {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: .2px
-    }
-
     .status {
       display: flex;
       align-items: center;
       gap: 10px;
       font-size: 13px;
-      color: var(--muted);
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, .03);
-      border: 1px solid rgba(255, 255, 255, .07);
+      font-weight: 200;
+      color: var(--color-muted);
+      padding: 6px 12px;
+      border: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
     .dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: #525b66;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, .05) inset
+      background: var(--color-border);
     }
 
     .dot.ok {
-      background: #22c55e
+      background: #fff;
     }
 
     .dot.err {
-      background: var(--danger)
-    }
-
-    /* Card com borda luminosa */
-    .card {
-      min-width: 520px;
-      position: relative;
-      background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .02));
-      border: 1px solid rgba(255, 255, 255, .08);
-      border-radius: 18px;
-      box-shadow:
-        0 20px 60px rgba(0, 0, 0, .40),
-        inset 0 1px 0 rgba(255, 255, 255, .05);
-      padding: 22px;
-      overflow: hidden;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      border-radius: 18px;
-      pointer-events: none;
-      background: linear-gradient(120deg, rgba(255, 79, 0, .35), rgba(255, 122, 51, .16), rgba(255, 255, 255, 0), rgba(255, 255, 255, .18));
-      mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-      -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
-      padding: 1px;
-      opacity: .35;
+      background: var(--color-danger);
     }
 
     .field {
@@ -150,89 +84,9 @@
 
     .actions-row {
       display: flex;
-      justify-content: flex-end;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    label {
-      display: block;
-      font-size: 12px;
-      letter-spacing: .3px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin: 0 0 8px 2px
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 14px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, .10);
-      background: linear-gradient(180deg, #111111, #050505);
-      background: rgba(255, 255, 255, .08);
-      color: var(--text);
-      outline: none;
-      transition: border .15s, box-shadow .15s, transform .08s ease;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
-    }
-
-    input[type="text"]::placeholder {
-      color: #6b7280
-    }
-
-    input[type="text"]:focus {
-      border-color: var(--acc2);
-      box-shadow: var(--ring)
-    }
-
-    .hint {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 10px
-    }
-
-    .btn {
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, .12);
-      background:
-        linear-gradient(225deg, rgba(240, 242, 255, .18) 5%, rgba(255, 255, 255, .08) 43%, rgba(255, 255, 255, .03) 68%);
-      color: #fff;
-      padding: 13px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-      display: inline-flex;
-      align-items: center;
+      justify-content: flex-start;
       gap: 10px;
-      transition: transform .06s ease, box-shadow .15s, border-color .15s;
-      box-shadow: 0 8px 22px rgba(0, 0, 0, .30);
-      will-change: transform;
-    }
-
-    .btn:hover {
-      box-shadow: 0 10px 26px rgba(0, 0, 0, .36)
-    }
-
-    .btn:active {
-      transform: translateY(1px)
-    }
-
-    .btn svg {
-      width: 18px;
-      height: 18px
-    }
-
-    .btn-primary {
-      background:
-        linear-gradient(90deg, rgba(255, 79, 0, .95), rgba(255, 122, 51, .92));
-      border-color: transparent;
-      box-shadow: 0 10px 30px rgba(255, 79, 0, .25), 0 0 0 1px rgba(255, 255, 255, .05) inset;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px dashed rgba(255, 255, 255, .20);
-      color: var(--muted)
+      flex-wrap: wrap;
     }
 
     .footer {
@@ -240,156 +94,27 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: var(--muted);
+      color: var(--color-muted);
       font-size: 12px;
       gap: 12px;
-      flex-wrap: wrap
+      flex-wrap: wrap;
     }
 
-    a {
-      color: #9ad1ff;
-      text-decoration: none
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: min(360px, calc(100vw - 36px));
-      max-width: min(420px, calc(100vw - 36px));
-      background: linear-gradient(180deg, #111111, #070707);
-      border: 1px solid rgba(255, 255, 255, .14);
-      color: #f8fafc;
-      padding: 14px 16px 14px 14px;
-      border-radius: 16px;
-      opacity: 0;
-      transform: translateY(10px) scale(.98);
-      transition: opacity .18s ease, transform .18s ease, border-color .18s ease;
-      z-index: 60;
-      box-shadow: 0 18px 50px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .06);
-      pointer-events: none;
-    }
-
-    .toast::before {
-      content: "";
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 5px rgba(34, 197, 94, .13);
-      flex: 0 0 auto;
-    }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0) scale(1)
-    }
-
-    .toast.success {
-      border-color: rgba(34, 197, 94, .34);
-    }
-
-    .toast.error {
-      border-color: rgba(239, 68, 68, .42);
-    }
-
-    .toast.error::before {
-      background: var(--danger);
-      box-shadow: 0 0 0 5px rgba(239, 68, 68, .13);
-    }
-
-    /* Modal */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .78);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50
-    }
-
-    .modal {
-      width: min(560px, 94vw);
-      background: #000000;
-      border: 1px solid rgba(255, 255, 255, .16);
-      border-radius: 16px;
-      padding: 20px 18px 16px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, .75);
-      overflow: hidden;
-    }
-
-    .modal header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px
-    }
-
-    .modal h3 {
-      margin: 0;
-      font-size: 18px
-    }
-
-    .modal .close {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      font-size: 22px;
-      cursor: pointer
-    }
-
-    .modal .body {
-      padding: 12px 0
-    }
-
-    .modal-input {
-      display: block;
-      width: 100%;
-      max-width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, .12);
-      background: #050505;
-      color: var(--text);
-      outline: none;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
-    }
-
-    .modal .actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      margin-top: 14px
-    }
-
-    code {
-      background: #0a0a0a;
-      border: 1px solid rgba(255, 255, 255, .06);
-      padding: 3px 6px;
-      border-radius: 6px
-    }
-
-    /* Pequenos toques */
     .kbd {
       font-size: 12px;
       padding: 2px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, .12);
-      color: #cbd5e1
+      border: 1px solid var(--color-border-subtle);
+      color: var(--color-muted);
     }
 
     .tips {
       display: flex;
       align-items: center;
       gap: 8px;
-      color: #a1a8b3;
+      color: var(--color-muted);
       font-size: 12px;
-      margin-top: 10px
+      margin-top: 10px;
+      font-weight: 200;
     }
 
     .logo-top {
@@ -402,23 +127,33 @@
       height: 72px;
     }
 
-
-    /* Acessibilidade */
-    @media (prefers-reduced-motion: reduce) {
-      .btn,
-      .toast {
-        transition: none
-      }
+    .footer-info {
+      text-align: center;
+      margin-top: 40px;
+      padding: 18px 12px;
+      color: var(--color-muted);
+      font-size: 13px;
+      font-weight: 200;
+      background: transparent;
+      text-transform: uppercase;
     }
 
-    /* Responsivo */
-    @media (max-width:520px) {
-      .brand .title {
-        font-size: 18px
+    .footer-info a {
+      color: var(--foreground);
+    }
+
+    .footer-info a:hover {
+      color: var(--color-muted);
+      text-decoration: underline;
+    }
+
+    @media (max-width: 520px) {
+      .card {
+        min-width: auto;
       }
 
       .status {
-        font-size: 12px
+        font-size: 12px;
       }
     }
   </style>
@@ -439,26 +174,31 @@
     <div class="card">
       <div>
         <div class="field">
-          <label for="termInput">Termo</label>
+          <label for="termInput">Lead e localização</label>
           <input id="termInput" type="text" placeholder="ex.: advogado em BH" autocomplete="off" />
           <div class="tips">Atalho: <span class="kbd">Enter</span> para <strong>Extrair</strong></div>
         </div>
 
-        <button id="editWebhookBtn" class="btn btn-ghost" title="Adicionar webhook">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-            <path d="M12 6v12m6-6H6" stroke-width="1.6" />
-          </svg>
-          <span>Adicionar webhook</span>
-        </button>
+        <div class="actions-row">
+          <button id="editWebhookBtn" class="btn btn-ghost" title="Adicionar webhook">
+            <span>
+              Adicionar webhook
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M12 6v12m6-6H6" stroke-width="1.6" />
+              </svg>
+            </span>
+          </button>
 
-        <!-- Mantive os mesmos IDs para o JS -->
-        <button id="extractBtn" class="btn btn-primary" title="Abrir o Google Maps e iniciar a extração">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-            <path d="M3 12h13" stroke-width="1.6" />
-            <path d="M12 5l7 7-7 7" stroke-width="1.6" />
-          </svg>
-          Extrair
-        </button>
+          <button id="extractBtn" class="btn btn-primary" title="Abrir o Google Maps e iniciar a extração">
+            <span>
+              Extrair
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M3 12h13" stroke-width="1.6" />
+                <path d="M12 5l7 7-7 7" stroke-width="1.6" />
+              </svg>
+            </span>
+          </button>
+        </div>
 
       </div>
 
@@ -467,7 +207,6 @@
     </div>
   </div>
 
-  <!-- Modal: apenas salvar webhook -->
   <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <header>
@@ -475,16 +214,15 @@
         <button class="close" id="closeModalBtn" aria-label="Fechar">x</button>
       </header>
       <div class="body">
-        <label for="webhookInput" style="display:block;font-size:12px;color:#9aa4b2;margin:0 0 6px 2px">URL do
-          webhook</label>
+        <label for="webhookInput">URL do webhook</label>
         <input id="webhookInput" class="modal-input" type="text" placeholder="https://seu-dominio.com/webhook/receber">
-        <div class="hint" style="margin-top:8px">
+        <div class="hint">
           A URL será salva no <code>localStorage</code> (e no <code>chrome.storage.local</code> para o content.js).
         </div>
       </div>
       <div class="actions">
-        <button class="btn" id="cancelModalBtn">Cancelar</button>
-        <button class="btn btn-primary" id="saveWebhookBtn">Salvar</button>
+        <button class="btn btn-ghost" id="cancelModalBtn"><span>Cancelar</span></button>
+        <button class="btn btn-primary" id="saveWebhookBtn"><span>Salvar</span></button>
       </div>
     </div>
   </div>
@@ -495,38 +233,7 @@
 </body>
 
 <footer class="footer-info">
-  <p>Desenvolvido por <a href="https://treendz.com.br" target="_blank" rel="noopener noreferrer">Treendz</a> - © 2025</p>
+  <p>Software desenvolvido pela <a href="https://treendz.com.br" target="_blank" rel="noopener noreferrer">Treendz</a></p>
 </footer>
-
-<style>
-  .footer-info {
-    text-align: center;
-    margin-top: 40px;
-    padding: 18px 12px;
-    border-top: 1px solid rgba(255, 255, 255, .05);
-    color: var(--muted);
-    font-size: 13px;
-    background: transparent;
-  }
-
-  .footer-info a {
-    color: #FF4F00;
-    text-decoration: none;
-  }
-
-  .footer-info a:hover {
-    text-decoration: underline; 
-  }
-
-  .footer-info .alert {
-    color: #fecaca;
-    font-size: 13px;
-    margin: 6px 0;
-  }
-
-  .footer-info strong {
-    color: #FF4F00;
-  }
-</style>
 
 </html>

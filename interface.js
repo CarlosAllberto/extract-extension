@@ -43,7 +43,7 @@ function renderWebhookStatus() {
 
   if (btn) {
     btn.title = buttonState.title;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">${buttonState.icon}</svg><span>${buttonState.label}</span>`;
+    btn.innerHTML = `<span>${buttonState.label}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">${buttonState.icon}</svg></span>`;
   }
 
   if (url) {

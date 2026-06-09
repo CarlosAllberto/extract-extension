@@ -19,5 +19,11 @@
    "manifest_version": 3,
    "name": "Extract Extension - Treendz",
    "permissions": [ "tabs", "storage", "scripting", "webNavigation", "activeTab" ],
-   "version": "1.0.0"
+   "version": "1.0.0",
+   "web_accessible_resources": [
+      {
+         "resources": [ "gmapsx-ui.css", "treendz-ui.css" ],
+         "matches": [ "*://*.google.com/*", "*://*.google.com.br/*" ]
+      }
+   ]
 }

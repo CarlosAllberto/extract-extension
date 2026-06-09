@@ -14,23 +14,41 @@ chrome.runtime.onInstalled.addListener(() => {
   openInterface();
 });
 
-// Executa uma função para checar/definir flag e só então carrega content.js
+// Executa content.js apenas uma vez por página de busca
 function bootIfNeeded(tabId) {
   chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
-      if (window.__gmapsExtractorBooted) return 'exists';
-      window.__gmapsExtractorBooted = true;
+      if (window.__gmapsExtractorBooted || window.__gmapsExtractorBooting) return 'skip';
+      window.__gmapsExtractorBooting = true;
       return 'boot';
-    }
-  }).then(([res]) => {
-    if (res && res.result === 'boot') {
+    },
+  }).then(async ([res]) => {
+    if (res?.result !== 'boot') return;
+
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ['content.js'],
+      });
+
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => {
+          window.__gmapsExtractorBooted = true;
+          window.__gmapsExtractorBooting = false;
+        },
+      });
+    } catch (err) {
       chrome.scripting.executeScript({
         target: { tabId },
-        files: ['content.js']
-      }).catch(err => console.warn('inject err:', err.message));
+        func: () => {
+          window.__gmapsExtractorBooting = false;
+        },
+      }).catch(() => {});
+      console.warn('inject err:', err.message);
     }
-  }).catch(err => console.warn('flag err:', err.message));
+  }).catch(err => console.warn('boot err:', err.message));
 }
 
 // onUpdated: quando terminar de carregar
