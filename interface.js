@@ -13,13 +13,13 @@ const toast = (msg, ok = true) => {
 const WEBHOOK_KEY = 'gmaps_extractor_webhook';
 const WEBHOOK_BUTTON_STATES = {
   add: {
-    title: 'Adicionar webhook',
-    label: 'Adicionar webhook',
+    title: 'Add webhook',
+    label: 'Add webhook',
     icon: '<path d="M12 6v12m6-6H6" stroke-width="1.6" />',
   },
   edit: {
-    title: 'Alterar webhook',
-    label: 'Alterar webhook',
+    title: 'Edit webhook',
+    label: 'Edit webhook',
     icon: '<path d="M4 20h4l10.5-10.5a2.8 2.8 0 0 0-4-4L4 16v4Z" stroke-width="1.6" /><path d="M13.5 6.5l4 4" stroke-width="1.6" />',
   },
 };
@@ -29,7 +29,7 @@ function getWebhook() {
 }
 function setWebhook(url) {
   localStorage.setItem(WEBHOOK_KEY, url);
-  // sincroniza com chrome.storage.local para o content.js também enxergar
+  // sync with chrome.storage.local so content.js can read it
   try { chrome?.storage?.local?.set({ gmaps_extractor_webhook: url }); } catch {}
   renderWebhookStatus();
 }
@@ -48,16 +48,16 @@ function renderWebhookStatus() {
 
   if (url) {
     dot.classList.add('ok'); dot.classList.remove('err');
-    txt.textContent = 'Webhook configurado';
+    txt.textContent = 'Webhook configured';
     txt.title = url;
   } else {
     dot.classList.remove('ok'); dot.classList.add('err');
-    txt.textContent = 'Webhook não definido';
+    txt.textContent = 'Webhook not set';
     txt.title = '';
   }
 }
 
-// Modal controls (apenas salvar webhook)
+// Modal controls (save webhook only)
 const modal = document.getElementById('modalBackdrop');
 let modalTrigger = null;
 
@@ -86,22 +86,22 @@ function isValidUrl(u) {
   } catch { return false; }
 }
 
-// Abre o Google Maps pesquisando o termo
+// Open Google Maps with the search term
 function openMapsWithTerm() {
   const termo = $('#termInput').value.trim();
-  if (!termo) { toast('Informe um termo para extrair.', false); $('#termInput').focus(); return; }
+  if (!termo) { toast('Enter a search term to extract.', false); $('#termInput').focus(); return; }
   const q = encodeURIComponent(termo);
   const url = `https://www.google.com/maps/search/${q}`;
   if (typeof chrome !== 'undefined' && chrome?.tabs?.create) chrome.tabs.create({ url });
   else window.open(url, '_blank');
 }
 
-// Salvar webhook (não envia leads por aqui)
+// Save webhook (does not send leads from here)
 function saveWebhookOnly() {
   const input = $('#webhookInput');
   const url = (input?.value || '').trim();
-  if (!url) { toast('Informe uma URL de webhook.', false); input?.focus(); return; }
-  if (!isValidUrl(url)) { toast('URL inválida. Verifique a URL.', false); input?.focus(); return; }
+  if (!url) { toast('Enter a webhook URL.', false); input?.focus(); return; }
+  if (!isValidUrl(url)) { toast('Invalid URL. Please check the URL.', false); input?.focus(); return; }
   setWebhook(url);
   closeModal();
 }
@@ -117,16 +117,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnExtract = document.getElementById('extractBtn');
   const termInput  = document.getElementById('termInput');
 
-  // “Definir webhook” só abre modal de salvar
   btnEdit?.addEventListener('click', openModal);
 
-  // Modal: apenas salvar webhook
   btnSave?.addEventListener('click', saveWebhookOnly);
   btnCancel?.addEventListener('click', closeModal);
   btnClose?.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
-  // Abrir maps (extrair)
   btnExtract?.addEventListener('click', openMapsWithTerm);
   termInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') openMapsWithTerm(); });
 });

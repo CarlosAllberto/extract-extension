@@ -9,7 +9,7 @@
    "background": {
       "service_worker": "background.js"
    },
-   "description": "Extrai leads do Google Maps e envia para o seu webhook.",
+   "description": "Extract leads from Google Maps and send them to your webhook.",
    "host_permissions": [ "*://*.google.com/*", "*://*.google.com.br/*" ],
    "icons": {
       "128": "icon128.png",
@@ -17,12 +17,12 @@
       "48": "icon48.png"
    },
    "manifest_version": 3,
-   "name": "Extract Extension - Treendz",
+   "name": "Extract",
    "permissions": [ "tabs", "storage", "scripting", "webNavigation", "activeTab" ],
    "version": "1.0.0",
    "web_accessible_resources": [
       {
-         "resources": [ "gmapsx-ui.css", "treendz-ui.css" ],
+         "resources": [ "global.css" ],
          "matches": [ "*://*.google.com/*", "*://*.google.com.br/*" ]
       }
    ]

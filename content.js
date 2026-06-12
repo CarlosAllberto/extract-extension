@@ -62,9 +62,9 @@
       const link = document.createElement('link');
       link.id = 'gmaps-extractor-style';
       link.rel = 'stylesheet';
-      link.href = chrome.runtime.getURL('gmapsx-ui.css');
+      link.href = chrome.runtime.getURL('global.css');
       link.onload = () => resolve();
-      link.onerror = () => reject(new Error('Falha ao carregar gmapsx-ui.css via link'));
+      link.onerror = () => reject(new Error('Failed to load global.css via link'));
       document.documentElement.appendChild(link);
     });
   }
@@ -76,7 +76,7 @@
 
     if (!stylesPromise) {
       stylesPromise = (async () => {
-        const url = chrome.runtime.getURL('gmapsx-ui.css');
+        const url = chrome.runtime.getURL('global.css');
 
         try {
           const response = await fetch(url);
@@ -84,13 +84,13 @@
           injectStyleSheet(await response.text());
           return;
         } catch (error) {
-          log('Fetch de gmapsx-ui.css falhou:', error?.message || error);
+          log('Failed to fetch global.css:', error?.message || error);
         }
 
         try {
           await loadStylesheetViaLink();
         } catch (error) {
-          log('Link de gmapsx-ui.css falhou:', error?.message || error);
+          log('Failed to load global.css via link:', error?.message || error);
           throw error;
         }
       })().catch((error) => {
@@ -106,14 +106,14 @@
     try {
       await ensureStyles();
     } catch (error) {
-      log('Toast sem stylesheet:', error?.message || error);
+      log('Toast without stylesheet:', error?.message || error);
     }
 
-    let toast = document.getElementById('gmapsx-toast');
+    let toast = document.getElementById('extract-toast');
     if (!toast) {
       toast = document.createElement('div');
-      toast.id = 'gmapsx-toast';
-      toast.className = 'gmapsx-toast';
+      toast.id = 'extract-toast';
+      toast.className = 'extract-toast';
       document.body.appendChild(toast);
     }
 
@@ -127,43 +127,43 @@
 
   async function openExtractionGame() {
     await ensureStyles();
-    document.getElementById('gmapsx-game-backdrop')?.remove();
+    document.getElementById('extract-game-backdrop')?.remove();
 
     const backdrop = document.createElement('div');
-    backdrop.id = 'gmapsx-game-backdrop';
+    backdrop.id = 'extract-game-backdrop';
     backdrop.innerHTML = `
-      <div class="gmapsx-game-modal" role="dialog" aria-modal="true" aria-label="Extraindo leads">
-        <h3>Extraindo leads...</h3>
-        <p class="gmapsx-game-subtitle">Enquanto buscamos os contatos, pule os obstáculos para passar o tempo.</p>
-        <div class="gmapsx-game-stage" tabindex="0">
-          <div class="gmapsx-game-ground"></div>
-          <div class="gmapsx-game-runner" aria-hidden="true">
-            <span class="gmapsx-cat-tail"></span>
-            <span class="gmapsx-cat-body"></span>
-            <span class="gmapsx-cat-head"></span>
-            <span class="gmapsx-cat-face"></span>
-            <span class="gmapsx-cat-leg back"></span>
-            <span class="gmapsx-cat-leg front"></span>
+      <div class="extract-game-modal" role="dialog" aria-modal="true" aria-label="Extracting leads">
+        <h3>Extracting leads...</h3>
+        <p class="extract-game-subtitle">While we collect contacts, jump obstacles to pass the time.</p>
+        <div class="extract-game-stage" tabindex="0">
+          <div class="extract-game-ground"></div>
+          <div class="extract-game-runner" aria-hidden="true">
+            <span class="extract-cat-tail"></span>
+            <span class="extract-cat-body"></span>
+            <span class="extract-cat-head"></span>
+            <span class="extract-cat-face"></span>
+            <span class="extract-cat-leg back"></span>
+            <span class="extract-cat-leg front"></span>
           </div>
-          <div class="gmapsx-game-over" hidden>
+          <div class="extract-game-over" hidden>
             <strong>Game over</strong>
-            <span>Pressione espaço ou clique para reiniciar</span>
+            <span>Press Space or click to restart</span>
           </div>
         </div>
-        <div class="gmapsx-game-score">
-          <span>Pontos: <b data-score>0</b></span>
-          <span class="gmapsx-game-hint">Espaço, ↑ ou clique para pular</span>
+        <div class="extract-game-score">
+          <span>Score: <b data-score>0</b></span>
+          <span class="extract-game-hint">Space, ↑ or click to jump</span>
         </div>
       </div>
     `;
 
     document.body.appendChild(backdrop);
 
-    const stage = backdrop.querySelector('.gmapsx-game-stage');
-    const modal = backdrop.querySelector('.gmapsx-game-modal');
-    const runner = backdrop.querySelector('.gmapsx-game-runner');
+    const stage = backdrop.querySelector('.extract-game-stage');
+    const modal = backdrop.querySelector('.extract-game-modal');
+    const runner = backdrop.querySelector('.extract-game-runner');
     const score = backdrop.querySelector('[data-score]');
-    const gameOverMessage = backdrop.querySelector('.gmapsx-game-over');
+    const gameOverMessage = backdrop.querySelector('.extract-game-over');
     const obstacles = new Set();
     const timers = new Set();
     let points = 0;
@@ -252,7 +252,7 @@
       if (closed || gameOver) return;
 
       const obstacle = document.createElement('div');
-      obstacle.className = 'gmapsx-game-obstacle';
+      obstacle.className = 'extract-game-obstacle';
       stage.appendChild(obstacle);
       obstacles.add(obstacle);
 
@@ -498,12 +498,12 @@
 
   function countFilledLeadFields(lead) {
     return [
-      lead.telefone,
-      lead.endereco,
+      lead.phone,
+      lead.address,
       lead.website,
       lead.rating,
       lead.reviews,
-      lead.especialidades,
+      lead.specialties,
     ].filter(Boolean).length;
   }
 
@@ -807,15 +807,15 @@
   }
 
   function isLeadReady(lead) {
-    if (!lead.nome_empresa) return false;
-    if (hasPhoneRowInDetail() && !lead.telefone) return false;
+    if (!lead.company_name) return false;
+    if (hasPhoneRowInDetail() && !lead.phone) return false;
     return hasUsefulLeadDetails(lead);
   }
 
   function extractCurrentLead(index) {
     const root = getPlaceDetailRoot();
     const name = textFrom(getPlaceTitle());
-    const telefone = extractPhone();
+    const phone = extractPhone();
     const address = getDetailText([
       'button[data-item-id="address"]',
       '[role="button"][data-item-id="address"]',
@@ -828,16 +828,16 @@
 
     const lead = {
       idx: index,
-      nome_empresa: name,
-      telefone,
-      endereco: address,
+      company_name: name,
+      phone,
+      address,
       website: extractWebsite(),
       rating,
       reviews,
-      especialidades: extractSpecialties(),
+      specialties: extractSpecialties(),
     };
 
-    log('Lead extraído:', lead.nome_empresa, `(${countFilledLeadFields(lead)} campos)`, lead.telefone ? `tel: ${lead.telefone}` : 'sem telefone');
+    log('Lead extracted:', lead.company_name, `(${countFilledLeadFields(lead)} fields)`, lead.phone ? `tel: ${lead.phone}` : 'no phone');
     return lead;
   }
 
@@ -852,8 +852,8 @@
       scrollDetailRoot();
 
       const lead = extractCurrentLead(index);
-      const leadScore = countFilledLeadFields(lead) + (lead.telefone ? 2 : 0);
-      const bestScore = countFilledLeadFields(bestLead) + (bestLead.telefone ? 2 : 0);
+      const leadScore = countFilledLeadFields(lead) + (lead.phone ? 2 : 0);
+      const bestScore = countFilledLeadFields(bestLead) + (bestLead.phone ? 2 : 0);
       if (leadScore >= bestScore) bestLead = lead;
     }
 
@@ -917,12 +917,12 @@
     const feed = await waitForResultsPanel();
 
     if (!feed && !document.querySelector('a.hfpxzc[href*="/maps/place/"]')) {
-      throw new Error('Painel não encontrado. Abortando.');
+      throw new Error('Results panel not found. Aborting.');
     }
 
     await scrollResultsToEnd(feed);
     const allAnchors = collectResultAnchors();
-    log('Cards para extrair:', allAnchors.length);
+    log('Cards to extract:', allAnchors.length);
 
     const leads = [];
     const seenNames = new Set();
@@ -937,7 +937,7 @@
       cardIndex += 1;
 
       try {
-        log(`Abrindo card ${cardNumber}/${anchors.length}:`, textFrom(anchor) || normalizePlaceUrl(anchor.href));
+        log(`Opening card ${cardNumber}/${anchors.length}:`, textFrom(anchor) || normalizePlaceUrl(anchor.href));
 
         let opened = await openResultByAnchor(anchor);
         if (!opened) {
@@ -946,29 +946,29 @@
           opened = await openResultByAnchor(retryAnchors[cardNumber - 1]);
         }
         if (!opened) {
-          log('Não foi possível abrir o card', cardNumber);
+          log('Could not open card', cardNumber);
           continue;
         }
 
         const lead = await extractCurrentLeadWhenReady(leads.length + 1);
-        if (!lead.nome_empresa) {
-          log('Lead sem nome no card', cardNumber);
+        if (!lead.company_name) {
+          log('Lead without name on card', cardNumber);
           await returnToResults(searchUrl);
           continue;
         }
 
-        if (seenNames.has(lead.nome_empresa)) {
-          log('Nome duplicado, pulando card', cardNumber, lead.nome_empresa);
+        if (seenNames.has(lead.company_name)) {
+          log('Duplicate name, skipping card', cardNumber, lead.company_name);
           await returnToResults(searchUrl);
           continue;
         }
 
-        seenNames.add(lead.nome_empresa);
+        seenNames.add(lead.company_name);
         leads.push(lead);
         await returnToResults(searchUrl);
         await sleep(600);
       } catch (error) {
-        log('Erro ao extrair card', cardNumber, error?.message || error);
+        log('Error extracting card', cardNumber, error?.message || error);
         await returnToResults(searchUrl);
       }
     }
@@ -982,37 +982,37 @@
 
   async function openSendModal(leadCount) {
     await ensureStyles();
-    document.getElementById('gmapsx-send-backdrop')?.remove();
+    document.getElementById('extract-send-backdrop')?.remove();
 
     const backdrop = document.createElement('div');
-    backdrop.id = 'gmapsx-send-backdrop';
-    backdrop.className = 'gmapsx-backdrop';
+    backdrop.id = 'extract-send-backdrop';
+    backdrop.className = 'extract-backdrop';
 
     const modal = document.createElement('div');
-    modal.className = 'gmapsx-modal';
+    modal.className = 'extract-modal';
     modal.innerHTML = `
       <header>
-        <h3>Enviar para Webhook</h3>
-        <button class="close" aria-label="Fechar">×</button>
+        <h3>Send to Webhook</h3>
+        <button class="close" aria-label="Close">×</button>
       </header>
       <div class="body">
-        <div class="hint" style="margin-bottom:8px">Foram coletados <b>${leadCount}</b> leads. O envio será feito para o webhook configurado na extensão.</div>
-        <label for="gmapsx-input">URL do webhook</label>
-        <input id="gmapsx-input" type="text" readonly placeholder="Nenhum webhook configurado">
+        <div class="hint" style="margin-bottom:8px"><b>${leadCount}</b> leads collected. They will be sent to the webhook configured in the extension.</div>
+        <label for="extract-input">Webhook URL</label>
+        <input id="extract-input" type="text" readonly placeholder="No webhook configured">
       </div>
       <div class="actions">
-        <button class="gmapsx-btn ghost" id="gmapsx-cancel"><span>Cancelar</span></button>
-        <button class="gmapsx-btn primary" id="gmapsx-send"><span>Enviar</span></button>
+        <button class="extract-btn ghost" id="extract-cancel"><span>Cancel</span></button>
+        <button class="extract-btn primary" id="extract-send"><span>Send</span></button>
       </div>
     `;
 
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
 
-    const input = modal.querySelector('#gmapsx-input');
+    const input = modal.querySelector('#extract-input');
     const closeButton = modal.querySelector('.close');
-    const cancelButton = modal.querySelector('#gmapsx-cancel');
-    const sendButton = modal.querySelector('#gmapsx-send');
+    const cancelButton = modal.querySelector('#extract-cancel');
+    const sendButton = modal.querySelector('#extract-send');
     const savedWebhook = await getSavedWebhook();
 
     if (savedWebhook) {
@@ -1033,23 +1033,23 @@
     sendButton.onclick = async () => {
       const webhookUrl = input.value.trim();
       if (!webhookUrl) {
-        showToast('Configure o webhook na extensão antes de enviar.', false);
+        showToast('Configure the webhook in the extension before sending.', false);
         return;
       }
 
       if (!isValidWebhookUrl(webhookUrl)) {
-        showToast('Webhook configurado inválido. Atualize na extensão.', false);
+        showToast('Invalid webhook configured. Update it in the extension.', false);
         return;
       }
 
       const leads = await getSavedLeads();
       if (!leads.length) {
-        showToast('Nenhum lead salvo para enviar.', false);
+        showToast('No saved leads to send.', false);
         return;
       }
 
       sendButton.disabled = true;
-      sendButton.innerHTML = '<span>Enviando…</span>';
+      sendButton.innerHTML = '<span>Sending…</span>';
 
       try {
         const response = await fetch(webhookUrl, {
@@ -1061,15 +1061,15 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         await saveWebhook(webhookUrl);
-        showToast(`Enviado com sucesso (${leads.length})!`);
+        showToast(`Sent successfully (${leads.length})!`);
         close();
         await saveLeads([]);
       } catch (error) {
-        log('Falha ao enviar webhook:', error?.message || error);
-        showToast('Falha ao enviar (verifique CORS/URL).', false);
+        log('Failed to send webhook:', error?.message || error);
+        showToast('Failed to send (check CORS/URL).', false);
       } finally {
         sendButton.disabled = false;
-        sendButton.innerHTML = '<span>Enviar</span>';
+        sendButton.innerHTML = '<span>Send</span>';
       }
     };
   }
@@ -1079,7 +1079,7 @@
 
     try {
       await ensureStyles();
-      log('content.js iniciado em /maps/search/.');
+      log('content.js started on /maps/search/.');
 
       game = await openExtractionGame();
       const leads = await extractLeadsFromResults();
@@ -1087,17 +1087,17 @@
       game = null;
 
       if (!leads.length) {
-        showToast('Nenhum lead encontrado.', false);
+        showToast('No leads found.', false);
         return;
       }
 
       await saveLeads(leads);
-      showToast(`Extração concluída (${leads.length})!`);
+      showToast(`Extraction complete (${leads.length})!`);
       await openSendModal(leads.length);
     } catch (error) {
       closeExtractionGame(game);
       log(error?.message || error);
-      showToast(error?.message || 'Erro ao extrair leads.', false);
+      showToast(error?.message || 'Error extracting leads.', false);
     }
   }
 

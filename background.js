@@ -4,17 +4,17 @@ function openInterface() {
   chrome.tabs.create({ url: chrome.runtime.getURL('interface.html') });
 }
 
-// Abre a interface ao clicar no ícone
+// Open the interface when the icon is clicked
 chrome.action.onClicked.addListener(() => {
   openInterface();
 });
 
-// Na instalação/atualização, abre a interface
+// On install/update, open the interface
 chrome.runtime.onInstalled.addListener(() => {
   openInterface();
 });
 
-// Executa content.js apenas uma vez por página de busca
+// Run content.js only once per search page
 function bootIfNeeded(tabId) {
   chrome.scripting.executeScript({
     target: { tabId },
@@ -51,14 +51,14 @@ function bootIfNeeded(tabId) {
   }).catch(err => console.warn('boot err:', err.message));
 }
 
-// onUpdated: quando terminar de carregar
+// onUpdated: when loading completes
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.url && SEARCH_RE.test(tab.url)) {
     bootIfNeeded(tabId);
   }
 });
 
-// SPA do Maps
+// Maps SPA navigation
 chrome.webNavigation.onHistoryStateUpdated.addListener(({ tabId, url, frameId }) => {
   if (frameId === 0 && url && SEARCH_RE.test(url)) bootIfNeeded(tabId);
 }, {
@@ -68,7 +68,7 @@ chrome.webNavigation.onHistoryStateUpdated.addListener(({ tabId, url, frameId })
   ]
 });
 
-// Navegação completa (algumas variações)
+// Full navigation (some variations)
 chrome.webNavigation.onCompleted.addListener(({ tabId, url, frameId }) => {
   if (frameId === 0 && url && SEARCH_RE.test(url)) bootIfNeeded(tabId);
 }, {

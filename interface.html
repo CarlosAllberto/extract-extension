@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-  <title>Extract Extension</title>
+  <title>Extract</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="treendz-ui.css">
+  <link rel="stylesheet" href="global.css">
 
   <style>
     * {
@@ -165,33 +163,33 @@
       <img src="logo.svg" alt="Logo" />
     </div>
     <div class="header">
-      <div class="status" title="Estado do webhook">
+      <div class="status" title="Webhook status">
         <span class="dot" id="webhookDot"></span>
-        <span id="webhookStatus">Webhook não definido</span>
+        <span id="webhookStatus">Webhook not set</span>
       </div>
     </div>
 
     <div class="card">
       <div>
         <div class="field">
-          <label for="termInput">Lead e localização</label>
-          <input id="termInput" type="text" placeholder="ex.: advogado em BH" autocomplete="off" />
-          <div class="tips">Atalho: <span class="kbd">Enter</span> para <strong>Extrair</strong></div>
+          <label for="termInput">Lead and location</label>
+          <input id="termInput" type="text" placeholder="e.g., lawyer in NYC" autocomplete="off" />
+          <div class="tips">Shortcut: <span class="kbd">Enter</span> to <strong>Extract</strong></div>
         </div>
 
         <div class="actions-row">
-          <button id="editWebhookBtn" class="btn btn-ghost" title="Adicionar webhook">
+          <button id="editWebhookBtn" class="btn btn-ghost" title="Add webhook">
             <span>
-              Adicionar webhook
+              Add webhook
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                 <path d="M12 6v12m6-6H6" stroke-width="1.6" />
               </svg>
             </span>
           </button>
 
-          <button id="extractBtn" class="btn btn-primary" title="Abrir o Google Maps e iniciar a extração">
+          <button id="extractBtn" class="btn btn-primary" title="Open Google Maps and start extraction">
             <span>
-              Extrair
+              Extract
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                 <path d="M3 12h13" stroke-width="1.6" />
                 <path d="M12 5l7 7-7 7" stroke-width="1.6" />
@@ -210,19 +208,19 @@
   <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal">
       <header>
-        <h3>Configurar Webhook</h3>
-        <button class="close" id="closeModalBtn" aria-label="Fechar">x</button>
+        <h3>Configure Webhook</h3>
+        <button class="close" id="closeModalBtn" aria-label="Close">x</button>
       </header>
       <div class="body">
-        <label for="webhookInput">URL do webhook</label>
-        <input id="webhookInput" class="modal-input" type="text" placeholder="https://seu-dominio.com/webhook/receber">
+        <label for="webhookInput">Webhook URL</label>
+        <input id="webhookInput" class="modal-input" type="text" placeholder="https://your-domain.com/webhook/receive">
         <div class="hint">
-          A URL será salva no <code>localStorage</code> (e no <code>chrome.storage.local</code> para o content.js).
+          The URL is saved in <code>localStorage</code> (and <code>chrome.storage.local</code> for the content script).
         </div>
       </div>
       <div class="actions">
-        <button class="btn btn-ghost" id="cancelModalBtn"><span>Cancelar</span></button>
-        <button class="btn btn-primary" id="saveWebhookBtn"><span>Salvar</span></button>
+        <button class="btn btn-ghost" id="cancelModalBtn"><span>Cancel</span></button>
+        <button class="btn btn-primary" id="saveWebhookBtn"><span>Save</span></button>
       </div>
     </div>
   </div>
@@ -233,7 +231,7 @@
 </body>
 
 <footer class="footer-info">
-  <p>Software desenvolvido pela <a href="https://treendz.com.br" target="_blank" rel="noopener noreferrer">Treendz</a></p>
+  <p>Software by <a href="https://treendz.com.br" target="_blank" rel="noopener noreferrer">Treendz</a></p>
 </footer>
 
 </html>

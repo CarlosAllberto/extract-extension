@@ -1,3 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700&display=swap");
+
+/* Treendz design tokens — aligned with treendz-site/app/globals.css */
 :root {
   --background: #000000;
   --foreground: #f9f9f9;
@@ -10,7 +13,9 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
-.gmapsx-modal label {
+/* Labels */
+label,
+.extract-modal label {
   display: block;
   font-size: 12px;
   letter-spacing: 0.05em;
@@ -20,7 +25,10 @@
   font-weight: 400;
 }
 
-.gmapsx-modal input[type="text"] {
+/* Inputs */
+input[type="text"],
+.modal-input,
+.extract-modal input[type="text"] {
   box-sizing: border-box;
   width: 100%;
   padding: 14px;
@@ -35,21 +43,28 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.gmapsx-modal input[type="text"]::placeholder {
+input[type="text"]::placeholder,
+.modal-input::placeholder,
+.extract-modal input[type="text"]::placeholder {
   color: var(--color-border);
 }
 
-.gmapsx-modal input[type="text"]:focus {
+input[type="text"]:focus,
+.modal-input:focus,
+.extract-modal input[type="text"]:focus {
   border-color: var(--color-border);
   box-shadow: 0 0 0 1px rgba(249, 249, 249, 0.4);
 }
 
-.gmapsx-modal input[type="text"][readonly] {
+input[type="text"][readonly],
+.extract-modal input[type="text"][readonly] {
   opacity: 0.85;
   cursor: default;
 }
 
-.gmapsx-btn {
+/* Buttons — BriefingButton hover-fill pattern */
+.btn,
+.extract-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -71,7 +86,8 @@
   transition: color 0.3s, border-color 0.15s;
 }
 
-.gmapsx-btn > span {
+.btn > span,
+.extract-btn > span {
   position: relative;
   z-index: 1;
   display: inline-flex;
@@ -80,14 +96,17 @@
   transition: color 0.3s;
 }
 
-.gmapsx-btn svg {
+.btn svg,
+.extract-btn svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
   order: 1;
 }
 
-.gmapsx-btn.primary::before {
+.btn-primary::before,
+.btn-outline::before,
+.extract-btn.primary::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -98,46 +117,73 @@
   z-index: 0;
 }
 
-.gmapsx-btn.primary:hover > span {
+.btn-primary:hover > span,
+.btn-outline:hover > span,
+.extract-btn.primary:hover > span {
   color: #000000;
 }
 
-.gmapsx-btn.primary:hover::before {
+.btn-primary:hover::before,
+.btn-outline:hover::before,
+.extract-btn.primary:hover::before {
   transform: scaleX(1);
 }
 
-.gmapsx-btn.primary {
+.btn-primary,
+.extract-btn.primary {
   border-color: var(--color-border);
   color: var(--foreground);
 }
 
-.gmapsx-btn.ghost {
+.btn-outline {
+  border-color: var(--color-border-subtle);
+}
+
+.btn-ghost,
+.extract-btn.ghost {
   border-color: var(--color-border-subtle);
   color: var(--color-muted);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
-.gmapsx-btn.ghost:hover {
+.btn-ghost:hover,
+.extract-btn.ghost:hover {
   border-color: var(--color-border);
   color: var(--foreground);
 }
 
-.gmapsx-btn:focus-visible {
+.btn:focus-visible,
+.extract-btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 1px rgba(249, 249, 249, 0.4);
 }
 
-.gmapsx-btn:disabled {
+.btn:disabled,
+.extract-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.gmapsx-btn:disabled::before {
+.btn:disabled::before,
+.extract-btn:disabled::before {
   transform: scaleX(0);
 }
 
-.gmapsx-toast {
+/* Card */
+.card {
+  position: relative;
+  min-width: 520px;
+  padding: 24px;
+  border: 1px solid rgba(100, 100, 100, 0.6);
+  background: var(--color-surface);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Toast */
+.toast,
+.extract-toast {
   position: fixed;
   right: 18px;
   bottom: 18px;
@@ -162,7 +208,8 @@
   pointer-events: none;
 }
 
-.gmapsx-toast::before {
+.toast::before,
+.extract-toast::before {
   content: "";
   width: 9px;
   height: 9px;
@@ -172,25 +219,31 @@
   flex: 0 0 auto;
 }
 
-.gmapsx-toast.show {
+.toast.show,
+.extract-toast.show {
   opacity: 1;
   transform: translateY(0);
 }
 
-.gmapsx-toast.success {
+.toast.success,
+.extract-toast.success {
   border-color: rgba(34, 197, 94, 0.34);
 }
 
-.gmapsx-toast.error {
+.toast.error,
+.extract-toast.error {
   border-color: rgba(239, 68, 68, 0.42);
 }
 
-.gmapsx-toast.error::before {
+.toast.error::before,
+.extract-toast.error::before {
   background: var(--color-danger);
   box-shadow: 0 0 0 5px rgba(239, 68, 68, 0.13);
 }
 
-.gmapsx-backdrop {
+/* Modal backdrop */
+.modal-backdrop,
+.extract-backdrop {
   position: fixed;
   inset: 0;
   display: flex;
@@ -199,12 +252,20 @@
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+.modal-backdrop {
+  display: none;
+  z-index: 50;
+}
+
+.extract-backdrop {
   z-index: 999999;
 }
 
-.gmapsx-modal {
-  width: min(520px, 94vw);
-  padding: 18px;
+/* Modal */
+.modal,
+.extract-modal {
   border: 1px solid rgba(100, 100, 100, 0.6);
   background: var(--color-surface);
   backdrop-filter: blur(12px);
@@ -216,14 +277,26 @@
   line-height: 1.45;
 }
 
-.gmapsx-modal header {
+.modal {
+  width: min(560px, 94vw);
+  padding: 20px 18px 16px;
+}
+
+.extract-modal {
+  width: min(520px, 94vw);
+  padding: 18px;
+}
+
+.modal header,
+.extract-modal header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
 }
 
-.gmapsx-modal h3 {
+.modal h3,
+.extract-modal h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 400;
@@ -231,7 +304,8 @@
   letter-spacing: 0.02em;
 }
 
-.gmapsx-modal .close {
+.modal .close,
+.extract-modal .close {
   border: none;
   background: transparent;
   color: var(--color-muted);
@@ -240,11 +314,13 @@
   line-height: 1;
 }
 
-.gmapsx-modal .body {
+.modal .body,
+.extract-modal .body {
   padding: 12px 0;
 }
 
-.gmapsx-modal .actions {
+.modal .actions,
+.extract-modal .actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -252,15 +328,40 @@
   flex-wrap: wrap;
 }
 
-#gmapsx-game-backdrop {
+.hint {
+  color: var(--color-muted);
+  font-size: 13px;
+  margin-top: 10px;
+  font-weight: 200;
+}
+
+code {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+  padding: 3px 6px;
+  border-radius: 0;
+  font-size: 12px;
+}
+
+a {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-muted);
+}
+
+/* Mini-game — orange cat mascot only */
+#extract-game-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 18px;
+  pointer-events: none;
   z-index: 999998;
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -269,37 +370,37 @@
   line-height: 1.45;
 }
 
-.gmapsx-game-modal {
-  width: min(620px, 94vw);
+.extract-game-modal {
+  width: min(420px, 94vw);
   padding: 20px;
   border: 1px solid rgba(100, 100, 100, 0.6);
-  background: var(--color-surface);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: #0a0a0a;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65);
+  pointer-events: auto;
 }
 
-.gmapsx-game-modal h3 {
+.extract-game-modal h3 {
   margin: 0 0 6px;
   font-size: 20px;
   font-weight: 400;
   text-transform: uppercase;
 }
 
-.gmapsx-game-subtitle {
+.extract-game-subtitle {
   margin: 0 0 14px;
   color: var(--color-muted);
   font-weight: 200;
 }
 
-.gmapsx-game-stage {
+.extract-game-stage {
   position: relative;
   height: 180px;
   overflow: hidden;
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-surface-elevated);
+  background: #111111;
 }
 
-.gmapsx-game-ground {
+.extract-game-ground {
   position: absolute;
   left: 0;
   right: 0;
@@ -308,7 +409,7 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
-.gmapsx-game-runner {
+.extract-game-runner {
   position: absolute;
   left: 38px;
   bottom: 36px;
@@ -316,7 +417,7 @@
   height: 44px;
 }
 
-.gmapsx-cat-body {
+.extract-cat-body {
   position: absolute;
   left: 16px;
   bottom: 9px;
@@ -327,7 +428,7 @@
   box-shadow: inset 0 -7px 0 rgba(0, 0, 0, 0.14);
 }
 
-.gmapsx-cat-body::after {
+.extract-cat-body::after {
   content: "";
   position: absolute;
   left: 8px;
@@ -339,7 +440,7 @@
   box-shadow: 9px 0 0 rgba(255, 255, 255, 0.16);
 }
 
-.gmapsx-cat-head {
+.extract-cat-head {
   position: absolute;
   right: 1px;
   bottom: 21px;
@@ -349,8 +450,8 @@
   background: #ff4f00;
 }
 
-.gmapsx-cat-head::before,
-.gmapsx-cat-head::after {
+.extract-cat-head::before,
+.extract-cat-head::after {
   content: "";
   position: absolute;
   top: -6px;
@@ -360,10 +461,10 @@
   clip-path: polygon(50% 0, 0 100%, 100% 100%);
 }
 
-.gmapsx-cat-head::before { left: 2px; }
-.gmapsx-cat-head::after { right: 2px; }
+.extract-cat-head::before { left: 2px; }
+.extract-cat-head::after { right: 2px; }
 
-.gmapsx-cat-face {
+.extract-cat-face {
   position: absolute;
   right: 6px;
   bottom: 29px;
@@ -374,7 +475,7 @@
   box-shadow: 8px 0 0 #111;
 }
 
-.gmapsx-cat-tail {
+.extract-cat-tail {
   position: absolute;
   left: 2px;
   bottom: 22px;
@@ -384,27 +485,27 @@
   background-repeat: no-repeat;
   transform-origin: 17px 25px;
   transform: rotate(-7deg);
-  animation: gmapsxCatTail 0.44s ease-in-out infinite alternate;
+  animation: extractCatTail 0.44s ease-in-out infinite alternate;
 }
 
-.gmapsx-cat-leg {
+.extract-cat-leg {
   position: absolute;
   bottom: 0;
   width: 7px;
   height: 15px;
   border-radius: 0 0 6px 6px;
   background: #ff4f00;
-  animation: gmapsxCatWalk 0.24s ease-in-out infinite alternate;
+  animation: extractCatWalk 0.24s ease-in-out infinite alternate;
 }
 
-.gmapsx-cat-leg.back { left: 24px; }
-.gmapsx-cat-leg.front { left: 43px; animation-delay: 0.12s; }
+.extract-cat-leg.back { left: 24px; }
+.extract-cat-leg.front { left: 43px; animation-delay: 0.12s; }
 
-.gmapsx-game-runner.jump {
-  animation: gmapsxJump 0.78s ease-out;
+.extract-game-runner.jump {
+  animation: extractJump 0.78s ease-out;
 }
 
-.gmapsx-game-obstacle {
+.extract-game-obstacle {
   position: absolute;
   right: -28px;
   bottom: 36px;
@@ -415,7 +516,7 @@
   z-index: 1;
 }
 
-.gmapsx-game-score {
+.extract-game-score {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -424,12 +525,12 @@
   font-weight: 400;
 }
 
-.gmapsx-game-hint {
+.extract-game-hint {
   font-size: 12px;
   font-weight: 200;
 }
 
-.gmapsx-game-over {
+.extract-game-over {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -441,49 +542,53 @@
   text-align: center;
 }
 
-.gmapsx-game-over[hidden] {
+.extract-game-over[hidden] {
   display: none;
 }
 
-.gmapsx-game-over strong {
+.extract-game-over strong {
   font-size: 28px;
   color: var(--foreground);
   font-weight: 400;
 }
 
-.gmapsx-game-over span {
+.extract-game-over span {
   font-size: 13px;
   color: var(--color-muted);
 }
 
-@keyframes gmapsxJump {
+@keyframes extractJump {
   0%, 100% { transform: translateY(0); }
   45% { transform: translateY(-132px); }
 }
 
-@keyframes gmapsxCatWalk {
+@keyframes extractCatWalk {
   0% { transform: translateY(0) rotate(-8deg); }
   100% { transform: translateY(3px) rotate(8deg); }
 }
 
-@keyframes gmapsxCatTail {
+@keyframes extractCatTail {
   0% { transform: rotate(-10deg); }
   100% { transform: rotate(-4deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gmapsx-btn::before,
-  .gmapsx-toast {
+  .btn::before,
+  .extract-btn::before,
+  .toast,
+  .extract-toast {
     transition: none;
   }
 
-  .gmapsx-btn.primary::before {
+  .btn-primary::before,
+  .btn-outline::before,
+  .extract-btn.primary::before {
     transition: none;
   }
 
-  .gmapsx-cat-leg,
-  .gmapsx-cat-tail,
-  .gmapsx-game-runner.jump {
+  .extract-cat-leg,
+  .extract-cat-tail,
+  .extract-game-runner.jump {
     animation: none;
   }
 }
