@@ -19,8 +19,8 @@ function bootIfNeeded(tabId) {
   chrome.scripting.executeScript({
     target: { tabId },
     func: () => {
-      if (window.__gmapsExtractorBooted || window.__gmapsExtractorBooting) return 'skip';
-      window.__gmapsExtractorBooting = true;
+      if (window.__extractBooted || window.__extractBooting) return 'skip';
+      window.__extractBooting = true;
       return 'boot';
     },
   }).then(async ([res]) => {
@@ -35,15 +35,15 @@ function bootIfNeeded(tabId) {
       await chrome.scripting.executeScript({
         target: { tabId },
         func: () => {
-          window.__gmapsExtractorBooted = true;
-          window.__gmapsExtractorBooting = false;
+          window.__extractBooted = true;
+          window.__extractBooting = false;
         },
       });
     } catch (err) {
       chrome.scripting.executeScript({
         target: { tabId },
         func: () => {
-          window.__gmapsExtractorBooting = false;
+          window.__extractBooting = false;
         },
       }).catch(() => {});
       console.warn('inject err:', err.message);

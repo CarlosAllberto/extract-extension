@@ -1,15 +1,15 @@
 (() => {
   const SEARCH_PATH_RE = /\/maps\/search\//;
   const STORAGE_KEYS = {
-    webhook: 'gmaps_extractor_webhook',
-    leads: 'gmaps_leads',
+    webhook: 'extract_webhook',
+    leads: 'extract_leads',
   };
   if (!SEARCH_PATH_RE.test(location.href)) return;
-  if (window.__gmapsExtractorRunning) return;
-  window.__gmapsExtractorRunning = true;
+  if (window.__extractRunning) return;
+  window.__extractRunning = true;
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const log = (...args) => console.log('[GMaps Extractor]', ...args);
+  const log = (...args) => console.log('[Extract]', ...args);
 
   function getFromStorage(key, fallback) {
     return new Promise((resolve) => {
@@ -44,23 +44,23 @@
   let stylesPromise = null;
 
   function injectStyleSheet(css) {
-    if (document.getElementById('gmaps-extractor-style')) return;
+    if (document.getElementById('extract-style')) return;
 
     const style = document.createElement('style');
-    style.id = 'gmaps-extractor-style';
+    style.id = 'extract-style';
     style.textContent = css;
     document.documentElement.appendChild(style);
   }
 
   function loadStylesheetViaLink() {
     return new Promise((resolve, reject) => {
-      if (document.getElementById('gmaps-extractor-style')) {
+      if (document.getElementById('extract-style')) {
         resolve();
         return;
       }
 
       const link = document.createElement('link');
-      link.id = 'gmaps-extractor-style';
+      link.id = 'extract-style';
       link.rel = 'stylesheet';
       link.href = chrome.runtime.getURL('global.css');
       link.onload = () => resolve();
@@ -70,7 +70,7 @@
   }
 
   function ensureStyles() {
-    if (document.getElementById('gmaps-extractor-style')) {
+    if (document.getElementById('extract-style')) {
       return Promise.resolve();
     }
 

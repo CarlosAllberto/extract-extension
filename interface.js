@@ -10,7 +10,7 @@ const toast = (msg, ok = true) => {
   el._t = setTimeout(() => el.classList.remove('show'), 2600);
 };
 
-const WEBHOOK_KEY = 'gmaps_extractor_webhook';
+const WEBHOOK_KEY = 'extract_webhook';
 const WEBHOOK_BUTTON_STATES = {
   add: {
     title: 'Add webhook',
@@ -30,7 +30,7 @@ function getWebhook() {
 function setWebhook(url) {
   localStorage.setItem(WEBHOOK_KEY, url);
   // sync with chrome.storage.local so content.js can read it
-  try { chrome?.storage?.local?.set({ gmaps_extractor_webhook: url }); } catch {}
+  try { chrome?.storage?.local?.set({ extract_webhook: url }); } catch {}
   renderWebhookStatus();
 }
 
